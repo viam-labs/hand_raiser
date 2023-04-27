@@ -19,7 +19,7 @@ async def connect():
 async def main():
     robot = await connect()
 
-    print('Resources:')
+    print("Resources:")
     print(robot.resource_names)
 
     # Note that the pin supplied is a placeholder. Please change this to a valid pin you are using.
@@ -43,6 +43,5 @@ async def main():
     # Don't forget to close the robot when you're done!
     await robot.close()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())
-
