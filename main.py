@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
+import time
 
 from viam.robot.client import RobotClient
 from viam.rpc.dial import DialOptions
@@ -24,6 +25,16 @@ async def main():
     print(robot.resource_names)
 
     pi = Board.from_robot(robot, "pi")
+    button = await pi.gpio_pin_by_name("18")
+    led = await pi.gpio_pin_by_name("16")
+
+    start = time.time()
+    while time.time() < start + 10.0:
+        button_state = await button.get()
+        old_state = button_state
+        if button_state != old_state:
+            print("button state has changed!")
+        await led.set(button_state)
 
     # pca
     # pca = Board.from_robot(robot, "pca")
