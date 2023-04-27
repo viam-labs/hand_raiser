@@ -159,5 +159,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# Don't track vim backup files
+*.swp
+
 # Don't track changes to secrets.py! We never want to check that in again.
 secrets.py
