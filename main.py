@@ -10,44 +10,60 @@ from viam.components.servo import Servo
 import secrets
 
 
-async def connect():
-    opts = RobotClient.Options(
-        refresh_interval=0,
-        dial_options=DialOptions(credentials=secrets.creds)
-    )
-    return await RobotClient.at_address(secrets.address, opts)
+
+class Robot:
+    UPPER_POSITION = 90
+    LOWER_POSITION = 0
+    WIGGLE_AMOUNT = 5
+
+    async def connect(self):
+        opts = RobotClient.Options(
+            refresh_interval=0,
+            dial_options=DialOptions(credentials=secrets.creds)
+        )
+        self.robot = await RobotClient.at_address(secrets.address, opts)
+        self.servo = Servo.from_robot(self.robot, "servo")
+
+    async def raise_hand(self):
+        await self.servo.move(self.UPPER_POSITION)
+
+    async def lower_hand(self):
+        await self.servo.move(self.LOWER_POSITION)
+
+    async def wiggle_hand(self):
+        for _ in range(3):
+            await self.servo.move(self.UPPER_POSITION + self.WIGGLE_AMOUNT)
+            await self.servo.move(self.UPPER_POSITION)
 
 
 async def main():
-    robot = await connect()
+    robot = Robot()
+    await robot.connect()
 
-    print("Resources:")
-    print(robot.resource_names)
-
-    pi = Board.from_robot(robot, "pi")
+    pi = Board.from_robot(robot.robot, "pi")
     button = await pi.gpio_pin_by_name("18")
     led = await pi.gpio_pin_by_name("16")
 
-    start = time.time()
-    while time.time() < start + 10.0:
+    count = 0
+    while True:
         button_state = await button.get()
         old_state = button_state
         if button_state != old_state:
             print("button state has changed!")
+            if button_state:
+                count += 1
+                count %= 3
+                if count == 1:
+                    robot.raise_hand()
+                elif count == 2:
+                    robot.wiggle_hand()
+                else:
+                    robot.lower_hand()
         await led.set(button_state)
 
-    # pca
-    # pca = Board.from_robot(robot, "pca")
-    # pca_return_value = await pca.gpio_pin_by_name("16")  # placeholder pin
-    # print(f"pca gpio_pin_by_name return value: {pca_return_value}")
-
-    # servo
-    servo = Servo.from_robot(robot, "servo")
-    servo_return_value = await servo.get_position()
-    print(f"servo get_position return value: {servo_return_value}")
-
     # Don't forget to close the robot when you're done!
-    await robot.close()
+    # TODO: make this a context manager
+    await robot.robot.close()
 
 if __name__ == "__main__":
     asyncio.run(main())
