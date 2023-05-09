@@ -11,7 +11,6 @@ from viam.components.servo import Servo
 import secrets
 
 
-
 class Robot:
     UPPER_POSITION = 30
     LOWER_POSITION = 0
@@ -49,7 +48,6 @@ async def makeRobot():
         await robot.robot.close()
 
 
-
 async def main():
     async with makeRobot() as robot:
         pi = Board.from_robot(robot.robot, "pi")
@@ -73,6 +71,7 @@ async def main():
                         await robot.lower_hand()
             old_state = button_state
             await led.set(button_state)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
