@@ -12,7 +12,7 @@ import secrets
 
 
 class Robot:
-    UPPER_POSITION = 90
+    UPPER_POSITION = 30
     LOWER_POSITION = 0
     WIGGLE_AMOUNT = 5
 
@@ -33,7 +33,9 @@ class Robot:
     async def wiggle_hand(self):
         for _ in range(3):
             await self.servo.move(self.UPPER_POSITION + self.WIGGLE_AMOUNT)
+            time.sleep(0.3)
             await self.servo.move(self.UPPER_POSITION)
+            time.sleep(0.3)
 
 
 async def main():
@@ -45,20 +47,21 @@ async def main():
     led = await pi.gpio_pin_by_name("16")
 
     count = 0
+    old_state = False
     while True:
         button_state = await button.get()
-        old_state = button_state
         if button_state != old_state:
             print("button state has changed!")
             if button_state:
                 count += 1
                 count %= 3
                 if count == 1:
-                    robot.raise_hand()
+                    await robot.raise_hand()
                 elif count == 2:
-                    robot.wiggle_hand()
+                    await robot.wiggle_hand()
                 else:
-                    robot.lower_hand()
+                    await robot.lower_hand()
+        old_state = button_state
         await led.set(button_state)
 
     # Don't forget to close the robot when you're done!
