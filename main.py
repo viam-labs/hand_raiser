@@ -59,8 +59,8 @@ class Robot:
     async def raise_hand(self):
         with self._mutex:
             self._count += 1
-            await self._servo.move(self.UPPER_POSITION)
             if self._count == 1:
+                await self._servo.move(self.UPPER_POSITION)
                 self._start_thread()
 
     async def lower_hand(self):
