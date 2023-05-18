@@ -41,6 +41,8 @@ class Robot:
 
     def _start_thread(self):
         self._should_shutdown_thread = False
+        if self._thread is not None:
+            print("LOGIC BUG: starting the thread when it's already started!?")
         self._thread = threading.Thread(
                 target=asyncio.run,
                 args=(self._wiggle_on_inactivity,),
@@ -51,6 +53,7 @@ class Robot:
         self._should_shutdown_thread = True
         self._cv.notify()
         self._thread.join()
+        self._thread = None
 
     async def raise_hand(self):
         with self._mutex:
