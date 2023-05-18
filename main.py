@@ -32,7 +32,10 @@ class Robot:
         # We have a background thread that wiggles the hand when it's been
         # raised for a long time. This condition variable is how to shut that
         # down.
-        self.cv = threading.Condition(lock=self.mutex)
+        # It would be intuitive to pass self.mutex to threading.Condition, but
+        # that will result in deadlock when you have the mutex and wait for the
+        # thread to shut down.
+        self.cv = threading.Condition()
         self.should_shutdown_thread = True
         self.thread = None
 
