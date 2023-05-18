@@ -92,12 +92,12 @@ class Robot:
     async def _wiggle_on_inactivity(self):
         # This is run in a daemon thread. When the hand is raised and nothing
         # has happened for INACTIVITY_PERIOD_S seconds, we wiggle the hand.
-        with self._cv:
-            while not self._should_shutdown_thread:
+        while not self._should_shutdown_thread:
+            with self._cv:
                 self._cv.wait(timeout=self.INACTIVITY_PERIOD_S)
-                if self._should_shutdown_thread:
-                    return
-                await self._wiggle_hand()
+            if self._should_shutdown_thread:
+                return
+            await self._wiggle_hand()
 
 
 @contextlib.asynccontextmanager
