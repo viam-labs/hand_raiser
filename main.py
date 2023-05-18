@@ -49,7 +49,7 @@ class Robot:
                 daemon=True)
         self._thread.start()
 
-    def _stop_thread(self(:
+    def _stop_thread(self):
         self._should_shutdown_thread = True
         self._cv.notify()
         self._thread.join()
