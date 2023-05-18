@@ -67,16 +67,16 @@ class Robot:
         with self._mutex:
             self._count -= 1
             if self._count == 0:
-                await self._servo.move(self.LOWER_POSITION)
                 self._stop_thread()
+                await self._servo.move(self.LOWER_POSITION)
 
     async def set_count(self, new_value):
         with self._mutex:
             should_start_thread = self._count == 0 and new_value > 0
             self._count = new_value
             if self._count == 0:
-                await self._servo.move(self.LOWER_POSITION)
                 self._stop_thread()
+                await self._servo.move(self.LOWER_POSITION)
             else:
                 await self._servo.move(self.UPPER_POSITION)
                 if should_start_thread:
