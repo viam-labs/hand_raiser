@@ -84,9 +84,11 @@ class Robot:
 
     async def _wiggle_hand(self):
         for _ in range(3):
-            await self._servo.move(self.UPPER_POSITION + self.WIGGLE_AMOUNT)
+            with self._mutex:
+                await self._servo.move(self.UPPER_POSITION + self.WIGGLE_AMOUNT)
             time.sleep(0.3)
-            await self._servo.move(self.UPPER_POSITION)
+            with self._mutex:
+                await self._servo.move(self.UPPER_POSITION)
             time.sleep(0.3)
 
     async def _wiggle_on_inactivity(self):
@@ -119,7 +121,8 @@ async def main():
         should_raise = False
         old_state = False
         while True:
-            button_state = await button.get()
+            with robot._mutex:  # TODO: remove this. The mutex should be private
+                button_state = await button.get()
             if button_state != old_state:
                 print("button state has changed!")
                 if button_state:
@@ -129,7 +132,8 @@ async def main():
                     else:
                         await robot.lower_hand()
             old_state = button_state
-            await led.set(button_state)
+            with robot._mutex:  # TODO: remove this. The mutex should be private
+                await led.set(button_state)
 
 
 if __name__ == "__main__":
