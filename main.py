@@ -36,32 +36,41 @@ class Robot:
         self.should_shutdown_thread = True
         self.thread = None
 
+    def _start_thread(self):
+        self.should_shutdown_thread = False
+        self.thread = threading.Thread(
+                target=asyncio.run,
+                args=(self._wiggle_on_inactivity,),
+                daemon=True)
+        self.thread.start()
+
+    def _stop_thread(self(:
+        self.should_shutdown_thread = True
+        self.cv.notify()
+        self.thread.join()
+
     async def raise_hand(self):
         with self.mutex:
             self.count += 1
             await self.servo.move(self.UPPER_POSITION)
             if self.count == 1:
-                self.should_shutdown_thread = False
-                self.thread = threading.Thread(
-                        target=asyncio.run,
-                        args=(self._wiggle_on_inactivity,),
-                        daemon=True)
-                self.thread.start()
+                self._start_thread()
 
     async def lower_hand(self):
         with self.mutex:
             self.count -= 1
             if self.count == 0:
                 await self.servo.move(self.LOWER_POSITION)
-                self.should_shutdown_thread = True
-                self.cv.notify()
-                self.thread.join()  # Wait for the thread to shut down
+                self._stop_thread()
 
     async def set_count(self, new_value):
         with self.mutex:
+            if self.count == 0 and new_value > 0:
+                self._start_thread()
             self.count = new_value
             if self.count == 0:
                 await self.servo.move(self.LOWER_POSITION)
+                self._stop_thread()
             else:
                 await self.servo.move(self.UPPER_POSITION)
 
