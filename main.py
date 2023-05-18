@@ -111,19 +111,16 @@ async def main():
         button = await pi.gpio_pin_by_name("18")
         led = await pi.gpio_pin_by_name("16")
 
-        count = 0
+        should_raise = False
         old_state = False
         while True:
             button_state = await button.get()
             if button_state != old_state:
                 print("button state has changed!")
                 if button_state:
-                    count += 1
-                    count %= 3
-                    if count == 1:
+                    should_raise = not should_raise
+                    if should_raise:
                         await robot.raise_hand()
-                    elif count == 2:
-                        await robot._wiggle_hand()
                     else:
                         await robot.lower_hand()
             old_state = button_state
