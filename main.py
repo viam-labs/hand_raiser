@@ -45,13 +45,14 @@ class Robot:
             print("LOGIC BUG: starting the thread when it's already started!?")
         self._thread = threading.Thread(
                 target=asyncio.run,
-                args=(self._wiggle_on_inactivity,),
+                args=(self._wiggle_on_inactivity(),),
                 daemon=True)
         self._thread.start()
 
     def _stop_thread(self):
         self._should_shutdown_thread = True
-        self._cv.notify()
+        with self._cv:
+            self._cv.notify()
         self._thread.join()
         self._thread = None
 
@@ -93,7 +94,7 @@ class Robot:
         # has happened for INACTIVITY_PERIOD_S seconds, we wiggle the hand.
         with self._cv:
             while not self._should_shutdown_thread:
-                self._cv.wait(timeout=INACTIVITY_PERIOD_S)
+                self._cv.wait(timeout=self.INACTIVITY_PERIOD_S)
                 if self._should_shutdown_thread:
                     return
                 await self._wiggle_hand()
