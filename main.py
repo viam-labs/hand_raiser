@@ -44,7 +44,7 @@ class Robot:
                 self.should_shutdown_thread = False
                 self.thread = threading.Thread(
                         target=asyncio.run,
-                        args=(self.wiggle_on_inactivity,),
+                        args=(self._wiggle_on_inactivity,),
                         daemon=True)
                 self.thread.start()
 
@@ -65,14 +65,14 @@ class Robot:
             else:
                 await self.servo.move(self.UPPER_POSITION)
 
-    async def wiggle_hand(self):
+    async def _wiggle_hand(self):
         for _ in range(3):
             await self.servo.move(self.UPPER_POSITION + self.WIGGLE_AMOUNT)
             time.sleep(0.3)
             await self.servo.move(self.UPPER_POSITION)
             time.sleep(0.3)
 
-    async def wiggle_on_inactivity(self):
+    async def _wiggle_on_inactivity(self):
         # This is run in a daemon thread. When the hand is raised and nothing
         # has happened for INACTIVITY_PERIOD_S seconds, we wiggle the hand.
         with self.cv:
@@ -80,7 +80,7 @@ class Robot:
                 self.cv.wait(timeout=INACTIVITY_PERIOD_S)
                 if self.should_shutdown_thread:
                     return
-                await self.wiggle_hand()
+                await self._wiggle_hand()
 
 
 @contextlib.asynccontextmanager
@@ -111,7 +111,7 @@ async def main():
                     if count == 1:
                         await robot.raise_hand()
                     elif count == 2:
-                        await robot.wiggle_hand()
+                        await robot._wiggle_hand()
                     else:
                         await robot.lower_hand()
             old_state = button_state
