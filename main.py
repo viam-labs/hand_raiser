@@ -71,14 +71,15 @@ class Robot:
 
     async def set_count(self, new_value):
         with self._mutex:
-            if self._count == 0 and new_value > 0:
-                self._start_thread()
+            should_start_thread = self._count == 0 and new_value > 0
             self._count = new_value
             if self._count == 0:
                 await self._servo.move(self.LOWER_POSITION)
                 self._stop_thread()
             else:
                 await self._servo.move(self.UPPER_POSITION)
+                if should_start_thread:
+                    self._start_thread()
 
     async def _wiggle_hand(self):
         for _ in range(3):
