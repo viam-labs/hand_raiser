@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import asyncio
 import contextlib
+import threading
 import time
 
 from viam.robot.client import RobotClient
@@ -15,6 +16,7 @@ class Robot:
     UPPER_POSITION = 30
     LOWER_POSITION = 0
     WIGGLE_AMOUNT = 5
+    INACTIVITY_PERIOD_S = 15
 
     async def connect(self):
         opts = RobotClient.Options(
@@ -24,11 +26,44 @@ class Robot:
         self.robot = await RobotClient.at_address(secrets.address, opts)
         self.servo = Servo.from_robot(self.robot, "servo")
 
+        self.mutex = threading.Lock()
+        self.count = 0  # Number of hands currently raised
+
+        # We have a background thread that wiggles the hand when it's been
+        # raised for a long time. This condition variable is how to shut that
+        # down.
+        self.cv = threading.Condition(lock=self.mutex)
+        self.should_shutdown_thread = True
+        self.thread = None
+
     async def raise_hand(self):
-        await self.servo.move(self.UPPER_POSITION)
+        with self.mutex:
+            self.count += 1
+            await self.servo.move(self.UPPER_POSITION)
+            if self.count == 1:
+                self.should_shutdown_thread = False
+                self.thread = threading.Thread(
+                        target=asyncio.run,
+                        args=(self.wiggle_on_inactivity,),
+                        daemon=True)
+                self.thread.start()
 
     async def lower_hand(self):
-        await self.servo.move(self.LOWER_POSITION)
+        with self.mutex:
+            self.count -= 1
+            if self.count == 0:
+                await self.servo.move(self.LOWER_POSITION)
+                self.should_shutdown_thread = True
+                self.cv.notify()
+                self.thread.join()  # Wait for the thread to shut down
+
+    async def set_count(self, new_value):
+        with self.mutex:
+            self.count = new_value
+            if self.count == 0:
+                await self.servo.move(self.LOWER_POSITION)
+            else:
+                await self.servo.move(self.UPPER_POSITION)
 
     async def wiggle_hand(self):
         for _ in range(3):
@@ -36,6 +71,16 @@ class Robot:
             time.sleep(0.3)
             await self.servo.move(self.UPPER_POSITION)
             time.sleep(0.3)
+
+    async def wiggle_on_inactivity(self):
+        # This is run in a daemon thread. When the hand is raised and nothing
+        # has happened for INACTIVITY_PERIOD_S seconds, we wiggle the hand.
+        with self.cv:
+            while not self.should_shutdown_thread:
+                self.cv.wait(timeout=INACTIVITY_PERIOD_S)
+                if self.should_shutdown_thread:
+                    return
+                await self.wiggle_hand()
 
 
 @contextlib.asynccontextmanager
