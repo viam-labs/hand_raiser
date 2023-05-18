@@ -23,8 +23,8 @@ class Robot:
             refresh_interval=0,
             dial_options=DialOptions(credentials=secrets.creds)
         )
-        self._robot = await RobotClient.at_address(secrets.address, opts)
-        self._servo = Servo.from_robot(self._robot, "servo")
+        self.robot = await RobotClient.at_address(secrets.address, opts)
+        self._servo = Servo.from_robot(self.robot, "servo")
 
         self._mutex = threading.Lock()
         self._count = 0  # Number of hands currently raised
