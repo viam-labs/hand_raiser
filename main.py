@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
 import contextlib
-import threading
 import time
 
 from viam.robot.client import RobotClient
@@ -16,7 +15,7 @@ class Robot:
     UPPER_POSITION = 30
     LOWER_POSITION = 0
     WIGGLE_AMOUNT = 5
-    INACTIVITY_PERIOD_S = 15
+    INACTIVITY_PERIOD_S = 5
 
     async def connect(self):
         opts = RobotClient.Options(
@@ -26,80 +25,103 @@ class Robot:
         self.robot = await RobotClient.at_address(secrets.address, opts)
         self._servo = Servo.from_robot(self.robot, "servo")
 
-        self._mutex = threading.Lock()
+        self._mutex = asyncio.Lock()
         self._count = 0  # Number of hands currently raised
 
-        # We have a background thread that wiggles the hand when it's been
+        # We have a background coroutine that wiggles the hand when it's been
         # raised for a long time. This condition variable is how to shut that
         # down.
-        # It would be intuitive to pass self._mutex to threading.Condition, but
-        # that will result in deadlock when you have the mutex and wait for the
-        # thread to shut down.
-        self._cv = threading.Condition()
-        self._should_shutdown_thread = True
-        self._thread = None
+        self._cv = asyncio.Condition()
+        self._should_shutdown_wiggler = True
+        self._wiggler = None
 
-    def _start_thread(self):
-        self._should_shutdown_thread = False
-        if self._thread is not None:
-            print("LOGIC BUG: starting the thread when it's already started!?")
-        self._thread = threading.Thread(
-                target=asyncio.run,
-                args=(self._wiggle_on_inactivity(),),
-                daemon=True)
-        self._thread.start()
+    def _start_wiggler(self):
+        self._should_shutdown_wiggler = False
+        if self._wiggler is not None:
+            print("LOGIC BUG: starting the coroutine that's already started!?")
+        print("starting wiggler...")
+        self._wiggler = asyncio.create_task(self._wiggle_on_inactivity())
 
-    def _stop_thread(self):
-        self._should_shutdown_thread = True
+    async def _stop_wiggler(self):
+        if self._wiggler is None:
+            print("LOGIC BUG: stopping the coroutine when it's not started!?")
+        self._should_shutdown_wiggler = True
+        print("stop_wiggler will acquire cv...")
         with self._cv:
+            print("notifying cv...")
             self._cv.notify()
-        self._thread.join()
-        self._thread = None
+        print("joining coroutine...")
+        await self._wiggler
+        print("joined coroutine!")
+        self._wiggler = None
 
     async def raise_hand(self):
-        with self._mutex:
+        print("Acquiring mutex to raise hand...")
+        async with self._mutex:
+            print("Acquired mutex to raise hand!")
             self._count += 1
             if self._count == 1:
                 await self._servo.move(self.UPPER_POSITION)
-                self._start_thread()
+                self._start_wiggler()
+        print("released mutex from raise")
 
     async def lower_hand(self):
-        with self._mutex:
+        print("Acquiring mutex to lower hand...")
+        async with self._mutex:
+            print("Acquired mutex to lower hand!")
             self._count -= 1
             if self._count == 0:
-                self._stop_thread()
+                self._stop_wiggler()
                 await self._servo.move(self.LOWER_POSITION)
+        print("released mutex from lower")
 
     async def set_count(self, new_value):
-        with self._mutex:
-            should_start_thread = self._count == 0 and new_value > 0
+        async with self._mutex:
+            should_start_wiggler = self._count == 0 and new_value > 0
             self._count = new_value
             if self._count == 0:
-                self._stop_thread()
+                self._stop_wiggler()
                 await self._servo.move(self.LOWER_POSITION)
             else:
                 await self._servo.move(self.UPPER_POSITION)
-                if should_start_thread:
-                    self._start_thread()
+                if should_start_wiggler:
+                    self._start_wiggler()
 
     async def _wiggle_hand(self):
         for _ in range(3):
-            with self._mutex:
+            print("acquiring wiggle mutex 1...")
+            async with self._mutex:
+                print("moving wiggle 1...")
                 await self._servo.move(self.UPPER_POSITION + self.WIGGLE_AMOUNT)
+            print("done moving wiggle 1!")
             time.sleep(0.3)
-            with self._mutex:
+            print("acquiring wiggle mutex 2...")
+            async with self._mutex:
+                print("moving wiggle 2...")
                 await self._servo.move(self.UPPER_POSITION)
+            print("done moving wiggle 2!")
             time.sleep(0.3)
 
     async def _wiggle_on_inactivity(self):
-        # This is run in a daemon thread. When the hand is raised and nothing
-        # has happened for INACTIVITY_PERIOD_S seconds, we wiggle the hand.
-        while not self._should_shutdown_thread:
-            with self._cv:
-                self._cv.wait(timeout=self.INACTIVITY_PERIOD_S)
-            if self._should_shutdown_thread:
-                return
-            await self._wiggle_hand()
+        # This is run in a separate coroutine. When the hand is raised and
+        # nothing has happened for INACTIVITY_PERIOD_S seconds, we wiggle the
+        # hand.
+        while not self._should_shutdown_wiggler:
+            try:
+                print("going to acquire CV...")
+                with self._cv:
+                    print("acquired CV! waiting for notify or timeout...")
+                    #self._cv.wait(timeout=self.INACTIVITY_PERIOD_S)
+                    await asyncio.wait_for(asyncio.shield(self._cv.wait),
+                                           timeout=self.INACTIVITY_PERIOD_S)
+                    print("got notify!")
+                    if self._should_shutdown_wiggler:
+                        print("returning from wiggler (and releasing CV)")
+                        return
+            except TimeoutError:
+                print("(released CV) got timeout! wiggling hand...")
+                await self._wiggle_hand()
+                print("done wiggling, back to top of loop...")
 
 
 @contextlib.asynccontextmanager
@@ -121,8 +143,12 @@ async def main():
         should_raise = False
         old_state = False
         while True:
-            with robot._mutex:  # TODO: remove this. The mutex should be private
+            #print("acquiring mutex to check button...")
+            # TODO: remove this. The mutex should be private
+            async with robot._mutex:
+                #print("acquired mutex to check button!")
                 button_state = await button.get()
+            #print("released mutex from button")
             if button_state != old_state:
                 print("button state has changed!")
                 if button_state:
@@ -132,8 +158,12 @@ async def main():
                     else:
                         await robot.lower_hand()
             old_state = button_state
-            with robot._mutex:  # TODO: remove this. The mutex should be private
+            #print("acquiring mutex to set LED...")
+            # TODO: remove this. The mutex should be private
+            async with robot._mutex:
+                #print("acquired mutex to set LED!")
                 await led.set(button_state)
+            #print("released mutex from LED")
 
 
 if __name__ == "__main__":
