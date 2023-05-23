@@ -47,9 +47,9 @@ class Robot:
             print("LOGIC BUG: stopping the coroutine when it's not started!?")
         self._should_shutdown_wiggler = True
         print("stop_wiggler will acquire cv...")
-        with self._cv:
+        async with self._cv:
             print("notifying cv...")
-            self._cv.notify()
+            await self._cv.notify()
         print("joining coroutine...")
         await self._wiggler
         print("joined coroutine!")
@@ -67,10 +67,10 @@ class Robot:
         while not self._should_shutdown_wiggler:
             try:
                 print("going to acquire CV...")
-                with self._cv:
+                async with self._cv:
                     print("acquired CV! waiting for notify or timeout...")
                     #self._cv.wait(timeout=self.INACTIVITY_PERIOD_S)
-                    await asyncio.wait_for(asyncio.shield(self._cv.wait),
+                    await asyncio.wait_for(asyncio.shield(self._cv.wait()),
                                            timeout=self.INACTIVITY_PERIOD_S)
                     print("got notify!")
                     if self._should_shutdown_wiggler:
