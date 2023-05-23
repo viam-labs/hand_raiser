@@ -55,6 +55,32 @@ class Robot:
         print("joined coroutine!")
         self._wiggler = None
 
+    async def _wiggle_on_inactivity(self):
+        """
+        This is a background coroutine that wiggles the hand if it's been
+        running for a long time. It is started when the count of raised hands
+        becomes nonzero, and stopped when the count goes back to 0.
+        """
+        # This is run in a separate coroutine. When the hand is raised and
+        # nothing has happened for INACTIVITY_PERIOD_S seconds, we wiggle the
+        # hand.
+        while not self._should_shutdown_wiggler:
+            try:
+                print("going to acquire CV...")
+                with self._cv:
+                    print("acquired CV! waiting for notify or timeout...")
+                    #self._cv.wait(timeout=self.INACTIVITY_PERIOD_S)
+                    await asyncio.wait_for(asyncio.shield(self._cv.wait),
+                                           timeout=self.INACTIVITY_PERIOD_S)
+                    print("got notify!")
+                    if self._should_shutdown_wiggler:
+                        print("returning from wiggler (and releasing CV)")
+                        return
+            except TimeoutError:
+                print("(released CV) got timeout! wiggling hand...")
+                await self._wiggle_hand()
+                print("done wiggling, back to top of loop...")
+
     async def raise_hand(self):
         """
         Call this to consider 1 extra person in the audience to have raised
@@ -120,32 +146,6 @@ class Robot:
                 await self._servo.move(self.UPPER_POSITION)
             print("done moving wiggle 2!")
             time.sleep(0.3)
-
-    async def _wiggle_on_inactivity(self):
-        """
-        This is a background coroutine that wiggles the hand if it's been
-        running for a long time. It is started when the count of raised hands
-        becomes nonzero, and stopped when the count goes back to 0.
-        """
-        # This is run in a separate coroutine. When the hand is raised and
-        # nothing has happened for INACTIVITY_PERIOD_S seconds, we wiggle the
-        # hand.
-        while not self._should_shutdown_wiggler:
-            try:
-                print("going to acquire CV...")
-                with self._cv:
-                    print("acquired CV! waiting for notify or timeout...")
-                    #self._cv.wait(timeout=self.INACTIVITY_PERIOD_S)
-                    await asyncio.wait_for(asyncio.shield(self._cv.wait),
-                                           timeout=self.INACTIVITY_PERIOD_S)
-                    print("got notify!")
-                    if self._should_shutdown_wiggler:
-                        print("returning from wiggler (and releasing CV)")
-                        return
-            except TimeoutError:
-                print("(released CV) got timeout! wiggling hand...")
-                await self._wiggle_hand()
-                print("done wiggling, back to top of loop...")
 
 
 @contextlib.asynccontextmanager
