@@ -56,6 +56,11 @@ class Robot:
         self._wiggler = None
 
     async def raise_hand(self):
+        """
+        Call this to consider 1 extra person in the audience to have raised
+        their hand. If this is the first person to do so, we'll raise our
+        servo, and otherwise we take no action.
+        """
         print("Acquiring mutex to raise hand...")
         async with self._mutex:
             print("Acquired mutex to raise hand!")
@@ -66,6 +71,11 @@ class Robot:
         print("released mutex from raise")
 
     async def lower_hand(self):
+        """
+        Call this to consider 1 extra person in the audience to have lowered
+        their hand. If this is the last person who had their hand raised, we'll
+        lower our servo, and otherwise take no action.
+        """
         print("Acquiring mutex to lower hand...")
         async with self._mutex:
             print("Acquired mutex to lower hand!")
@@ -76,6 +86,11 @@ class Robot:
         print("released mutex from lower")
 
     async def set_count(self, new_value):
+        """
+        Call this to set the number of hands raised in the audience to a certain
+        value. This is mainly used to "reset" the count of raised hands if
+        someone forgets to lower their hand.
+        """
         async with self._mutex:
             should_start_wiggler = self._count == 0 and new_value > 0
             self._count = new_value
@@ -88,6 +103,10 @@ class Robot:
                     self._start_wiggler()
 
     async def _wiggle_hand(self):
+        """
+        This moves the servo to wiggle the hand, intended to be used when we've
+        had the hand raised for a while.
+        """
         for _ in range(3):
             print("acquiring wiggle mutex 1...")
             async with self._mutex:
@@ -103,6 +122,11 @@ class Robot:
             time.sleep(0.3)
 
     async def _wiggle_on_inactivity(self):
+        """
+        This is a background coroutine that wiggles the hand if it's been
+        running for a long time. It is started when the count of raised hands
+        becomes nonzero, and stopped when the count goes back to 0.
+        """
         # This is run in a separate coroutine. When the hand is raised and
         # nothing has happened for INACTIVITY_PERIOD_S seconds, we wiggle the
         # hand.
