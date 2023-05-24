@@ -36,13 +36,9 @@ class Robot:
 
     def _start_wiggler(self):
         self._shut_down_wiggler.clear()
-        if self._wiggler is not None:
-            print("LOGIC BUG: starting the coroutine that's already started!?")
         self._wiggler = asyncio.create_task(self._wiggle_on_inactivity())
 
     async def _stop_wiggler(self):
-        if self._wiggler is None:
-            print("LOGIC BUG: stopping the coroutine when it's not started!?")
         self._shut_down_wiggler.set()
         await self._wiggler
         self._wiggler = None
