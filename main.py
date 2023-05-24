@@ -111,11 +111,9 @@ class Robot:
         had the hand raised for a while.
         """
         for _ in range(3):
-            async with self._mutex:
-                await self._servo.move(self.UPPER_POSITION + self.WIGGLE_AMOUNT)
+            await self._servo.move(self.UPPER_POSITION + self.WIGGLE_AMOUNT)
             time.sleep(0.3)
-            async with self._mutex:
-                await self._servo.move(self.UPPER_POSITION)
+            await self._servo.move(self.UPPER_POSITION)
             time.sleep(0.3)
 
 
@@ -138,9 +136,7 @@ async def main():
         should_raise = False
         old_state = False
         while True:
-            # TODO: remove this. The mutex should be private
-            async with robot._mutex:
-                button_state = await button.get()
+            button_state = await button.get()
             if button_state != old_state:
                 print("button state has changed to {}!".format(button_state))
                 if button_state:
@@ -150,9 +146,7 @@ async def main():
                     else:
                         await robot.lower_hand()
             old_state = button_state
-            # TODO: remove this. The mutex should be private
-            async with robot._mutex:
-                await led.set(button_state)
+            await led.set(button_state)
 
 
 if __name__ == "__main__":
