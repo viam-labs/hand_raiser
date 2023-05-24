@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
 import contextlib
-import time
 
 from viam.robot.client import RobotClient
 from viam.rpc.dial import DialOptions
@@ -112,9 +111,9 @@ class Robot:
         """
         for _ in range(3):
             await self._servo.move(self.UPPER_POSITION + self.WIGGLE_AMOUNT)
-            time.sleep(0.3)
+            await asyncio.sleep(0.3)
             await self._servo.move(self.UPPER_POSITION)
-            time.sleep(0.3)
+            await asyncio.sleep(0.3)
 
 
 @contextlib.asynccontextmanager
