@@ -27,11 +27,12 @@ class Robot:
         self._mutex = asyncio.Lock()
         self._count = 0  # Number of hands currently raised
 
-        # We have a background coroutine that wiggles the hand when it's been
-        # raised for a long time. This condition variable is how to shut that
-        # down.
-        self._shut_down_wiggler = asyncio.Event()
+        # self._wiggler will become an asyncio.Task when the hand is raised. It
+        # will wiggle the hand when it has been raised for over
+        # INACTIVITY_PERIOD_S seconds. When the hand is lowered, we set the
+        # Event to tell the task to stop.
         self._wiggler = None
+        self._shut_down_wiggler = asyncio.Event()
 
     def _start_wiggler(self):
         self._shut_down_wiggler.clear()
@@ -48,13 +49,10 @@ class Robot:
 
     async def _wiggle_on_inactivity(self):
         """
-        This is a background coroutine that wiggles the hand if it's been
-        running for a long time. It is started when the count of raised hands
-        becomes nonzero, and stopped when the count goes back to 0.
+        This is a background coroutine that wiggles the hand every
+        INACTIVITY_PERIOD_S seconds. It is started when the count of raised
+        hands becomes nonzero, and stopped when the count goes back to 0.
         """
-        # This is run in a separate coroutine. When the hand is raised and
-        # nothing has happened for INACTIVITY_PERIOD_S seconds, we wiggle the
-        # hand.
         while True:
             try:
                 await asyncio.wait_for(self._shut_down_wiggler.wait(),
