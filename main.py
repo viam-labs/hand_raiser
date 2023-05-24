@@ -49,7 +49,7 @@ class Robot:
         print("stop_wiggler will acquire cv...")
         async with self._cv:
             print("notifying cv...")
-            await self._cv.notify()
+            self._cv.notify()
         print("joining coroutine...")
         await self._wiggler
         print("joined coroutine!")
@@ -94,7 +94,7 @@ class Robot:
             if self._count == 1:
                 await self._servo.move(self.UPPER_POSITION)
                 self._start_wiggler()
-        print("released mutex from raise")
+        print("released mutex at end of raising hand")
 
     async def lower_hand(self):
         """
@@ -174,7 +174,7 @@ async def main():
                 button_state = await button.get()
             #print("released mutex from button")
             if button_state != old_state:
-                print("button state has changed!")
+                print("button state has changed to {}!".format(button_state))
                 if button_state:
                     should_raise = not should_raise
                     if should_raise:
