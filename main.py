@@ -17,6 +17,11 @@ class Robot:
     INACTIVITY_PERIOD_S = 5
 
     async def connect(self):
+        """
+        This function does the initialization that would normally go in
+        __init__(), except we need asyncio functionality, so we put it here
+        instead.
+        """
         opts = RobotClient.Options(
             refresh_interval=0,
             dial_options=DialOptions(credentials=secrets.creds)
