@@ -29,17 +29,14 @@ class Robot:
 
         # self._wiggler will become an asyncio.Task when the hand is raised. It
         # will wiggle the hand when it has been raised for over
-        # INACTIVITY_PERIOD_S seconds. When the hand is lowered, we set the
-        # Event to tell the task to stop.
+        # INACTIVITY_PERIOD_S seconds.
         self._wiggler = None
-        self._shut_down_wiggler = asyncio.Event()
 
     def _start_wiggler(self):
-        self._shut_down_wiggler.clear()
         self._wiggler = asyncio.create_task(self._wiggle_on_inactivity())
 
     async def _stop_wiggler(self):
-        self._shut_down_wiggler.set()
+        self._wiggler.cancel()
         await self._wiggler
         self._wiggler = None
 
@@ -47,15 +44,14 @@ class Robot:
         """
         This is a background coroutine that wiggles the hand every
         INACTIVITY_PERIOD_S seconds. It is started when the count of raised
-        hands becomes nonzero, and stopped when the count goes back to 0.
+        hands becomes nonzero, and canceled when the count goes back to 0.
         """
-        while True:
-            try:
-                await asyncio.wait_for(self._shut_down_wiggler.wait(),
-                                       timeout=self.INACTIVITY_PERIOD_S)
-                return
-            except TimeoutError:
+        try:
+            while True:
+                await asyncio.sleep(timeout=self.INACTIVITY_PERIOD_S)
                 await self._wiggle_hand()
+        except asyncio.CancelledError:
+            return
 
     async def raise_hand(self):
         """
