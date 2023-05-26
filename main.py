@@ -53,7 +53,7 @@ class Robot:
         """
         try:
             while True:
-                await asyncio.sleep(timeout=self.INACTIVITY_PERIOD_S)
+                await asyncio.sleep(self.INACTIVITY_PERIOD_S)
                 await self._wiggle_hand()
         except asyncio.CancelledError:
             return
