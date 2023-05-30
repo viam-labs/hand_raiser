@@ -26,8 +26,10 @@ class Robot:
             refresh_interval=0,
             dial_options=DialOptions(credentials=secrets.creds)
         )
+        # TODO: make this private when we're ready
         self.robot = await RobotClient.at_address(secrets.address, opts)
         self._servo = Servo.from_robot(self.robot, "servo")
+        await self._servo.move(self.LOWER_POSITION)
 
         # self._wiggler will become an asyncio.Task when the hand is raised. It
         # will wiggle the hand when it has been raised for over
