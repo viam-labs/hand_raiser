@@ -89,15 +89,17 @@ class Robot:
         someone forgets to lower their hand.
         """
         async with self._mutex:
-            should_start_wiggler = self._count == 0 and new_value > 0
+            should_raise_servo = self._count == 0 and new_value > 0
+            should_lower_servo = self._count > 0 and new_value == 0
+
             self._count = new_value
-            if self._count == 0:
+
+            if should_raise_servo:
+                await self._servo.move(self.UPPER_POSITION)
+                self._start_wiggler()
+            if should_lower_servo:
                 await self._stop_wiggler()
                 await self._servo.move(self.LOWER_POSITION)
-            else:
-                await self._servo.move(self.UPPER_POSITION)
-                if should_start_wiggler:
-                    self._start_wiggler()
 
     async def _wiggle_hand(self):
         """
