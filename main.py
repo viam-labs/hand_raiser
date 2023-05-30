@@ -77,7 +77,6 @@ class Audience:
         self._robot = robot
         self._mutex = asyncio.Lock()
         self._count = 0  # Number of people in the audience with their hand raised
-        self._robot.lower_hand()
 
     async def increment_count(self):
         """
@@ -88,7 +87,7 @@ class Audience:
         async with self._mutex:
             self._count += 1
             if self._count == 1:
-                self._robot.raise_hand()
+                await self._robot.raise_hand()
 
     async def decrement_count(self):
         """
@@ -99,7 +98,7 @@ class Audience:
         async with self._mutex:
             self._count -= 1
             if self._count == 0:
-                self._robot.lower_hand()
+                await self._robot.lower_hand()
 
     async def set_count(self, new_value):
         """
@@ -109,9 +108,9 @@ class Audience:
         """
         async with self._mutex:
             if self._count == 0 and new_value > 0:
-                self._robot.raise_hand()
+                await self._robot.raise_hand()
             if should_lower_servo = self._count > 0 and new_value == 0:
-                self._robot.lower_hand()
+                await self._robot.lower_hand()
 
             self._count = new_value
 
