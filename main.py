@@ -36,6 +36,10 @@ class Robot:
         # INACTIVITY_PERIOD_S seconds.
         self._wiggler = None
 
+    # TODO: remove this when we're ready
+    def get_pi(self):
+        return Board.from_robot(self.robot, "pi")
+
     async def _wiggle_on_inactivity(self):
         """
         This is a background coroutine that wiggles the hand every
@@ -128,7 +132,7 @@ async def makeRobot():
 async def main():
     async with makeRobot() as robot:
         audience = Audience(robot)
-        pi = Board.from_robot(robot.robot, "pi")
+        pi = robot.get_pi()
         button = await pi.gpio_pin_by_name("18")
         led = await pi.gpio_pin_by_name("16")
 
