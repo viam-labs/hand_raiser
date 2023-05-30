@@ -106,15 +106,12 @@ class Audience:
         someone forgets to lower their hand.
         """
         async with self._mutex:
-            should_raise_servo = self._count == 0 and new_value > 0
-            should_lower_servo = self._count > 0 and new_value == 0
+            if self._count == 0 and new_value > 0:
+                self._robot.raise_hand()
+            if should_lower_servo = self._count > 0 and new_value == 0:
+                self._robot.lower_hand()
 
             self._count = new_value
-
-            if should_raise_servo:
-                self._robot.raise_hand()
-            if should_lower_servo:
-                self._robot.lower_hand()
 
 
 @contextlib.asynccontextmanager
