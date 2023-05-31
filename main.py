@@ -84,6 +84,13 @@ class Robot:
         self._wiggler = None
         await self._servo.move(self.LOWER_POSITION)
 
+    async def __enter__(self):
+        await self.connect()
+        return self
+
+    async def __exit__(self, *exception_data):
+        await self._robot.close()
+
 
 class Audience:
     def __init__(self, robot):
@@ -128,18 +135,8 @@ class Audience:
             self._count = new_value
 
 
-@contextlib.asynccontextmanager
-async def makeRobot():
-    robot = Robot()
-    await robot.connect()
-    try:
-        yield robot
-    finally:
-        await robot._robot.close()
-
-
 async def main():
-    async with makeRobot() as robot:
+    async with Robot() as robot:
         audience = Audience(robot)
         pi = robot.get_pi()
         button = await pi.gpio_pin_by_name("18")
