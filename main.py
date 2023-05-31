@@ -16,25 +16,6 @@ class Robot:
     WIGGLE_AMOUNT = 5
     INACTIVITY_PERIOD_S = 5
 
-    async def connect(self):
-        """
-        This function does the initialization that would normally go in
-        __init__(), except we need asyncio functionality, so we put it here
-        instead.
-        """
-        opts = RobotClient.Options(
-            refresh_interval=0,
-            dial_options=DialOptions(credentials=secrets.creds)
-        )
-        self._robot = await RobotClient.at_address(secrets.address, opts)
-        self._servo = Servo.from_robot(self._robot, "servo")
-        await self._servo.move(self.LOWER_POSITION)
-
-        # This will become an asyncio.Task when the hand is raised. It will
-        # wiggle the hand when it has been raised for over INACTIVITY_PERIOD_S
-        # seconds.
-        self._wiggler = None
-
     # TODO: remove this when we're ready
     def get_pi(self):
         return Board.from_robot(self._robot, "pi")
@@ -85,7 +66,23 @@ class Robot:
         await self._servo.move(self.LOWER_POSITION)
 
     async def __enter__(self):
-        await self.connect()
+        """
+        This function does the initialization that would normally go in
+        __init__(), except we need asyncio functionality, so we put it here
+        instead.
+        """
+        # This will become an asyncio.Task when the hand is raised. It will
+        # wiggle the hand when it has been raised for over INACTIVITY_PERIOD_S
+        # seconds.
+        self._wiggler = None
+
+        opts = RobotClient.Options(
+            refresh_interval=0,
+            dial_options=DialOptions(credentials=secrets.creds)
+        )
+        self._robot = await RobotClient.at_address(secrets.address, opts)
+        self._servo = Servo.from_robot(self._robot, "servo")
+        await self._servo.move(self.LOWER_POSITION)
         return self
 
     async def __exit__(self, *exception_data):
