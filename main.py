@@ -66,11 +66,6 @@ class Robot:
         await self._servo.move(self.LOWER_POSITION)
 
     async def __enter__(self):
-        """
-        This function does the initialization that would normally go in
-        __init__(), except we need asyncio functionality, so we put it here
-        instead.
-        """
         # This will become an asyncio.Task when the hand is raised. It will
         # wiggle the hand when it has been raised for over INACTIVITY_PERIOD_S
         # seconds.
