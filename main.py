@@ -60,7 +60,12 @@ class Robot:
         """
         Call this to move the servo to the raised position and start the task
         that wiggles the hand on inactivity.
+
+        Note: this function is not thread safe!
         """
+        if self._wiggler is not None:
+            print("LOGIC BUG: trying to raise already-raised hand")
+            return
         await self._servo.move(self.UPPER_POSITION)
         self._wiggler = asyncio.create_task(self._wiggle_on_inactivity())
 
@@ -68,7 +73,12 @@ class Robot:
         """
         Call this to move the servo to the lowered position and stop the
         background task that wiggles the hand once in a while.
+
+        Note: this function is not thread safe!
         """
+        if self._wiggler is None:
+            print("LOGIC BUG: trying to lower already-lowered hand")
+            return
         self._wiggler.cancel()
         await self._wiggler
         self._wiggler = None
