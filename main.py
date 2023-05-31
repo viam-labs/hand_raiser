@@ -30,9 +30,9 @@ class Robot:
         self._servo = Servo.from_robot(self._robot, "servo")
         await self._servo.move(self.LOWER_POSITION)
 
-        # self._wiggler will become an asyncio.Task when the hand is raised. It
-        # will wiggle the hand when it has been raised for over
-        # INACTIVITY_PERIOD_S seconds.
+        # This will become an asyncio.Task when the hand is raised. It will
+        # wiggle the hand when it has been raised for over INACTIVITY_PERIOD_S
+        # seconds.
         self._wiggler = None
 
     # TODO: remove this when we're ready
