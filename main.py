@@ -33,6 +33,8 @@ class Robot:
         return self
 
     async def __aexit__(self, *exception_data):
+        if self._wiggler is not None:
+            await self.lower_hand()
         await self._robot.close()
 
     # TODO: remove this when we're ready
