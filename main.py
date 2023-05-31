@@ -17,17 +17,18 @@ class Robot:
     INACTIVITY_PERIOD_S = 5
 
     async def __enter__(self):
-        # This will become an asyncio.Task when the hand is raised. It will
-        # wiggle the hand when it has been raised for over INACTIVITY_PERIOD_S
-        # seconds.
-        self._wiggler = None
-
         opts = RobotClient.Options(
             refresh_interval=0,
             dial_options=DialOptions(credentials=secrets.creds)
         )
         self._robot = await RobotClient.at_address(secrets.address, opts)
         self._servo = Servo.from_robot(self._robot, "servo")
+
+        # This will become an asyncio.Task when the hand is raised. It will
+        # wiggle the hand when it has been raised for over INACTIVITY_PERIOD_S
+        # seconds.
+        self._wiggler = None
+
         await self._servo.move(self.LOWER_POSITION)
         return self
 
