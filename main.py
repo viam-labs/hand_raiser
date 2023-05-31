@@ -16,7 +16,7 @@ class Robot:
     WIGGLE_AMOUNT = 5
     INACTIVITY_PERIOD_S = 5
 
-    async def __enter__(self):
+    async def __aenter__(self):
         opts = RobotClient.Options(
             refresh_interval=0,
             dial_options=DialOptions(credentials=secrets.creds)
@@ -32,7 +32,7 @@ class Robot:
         await self._servo.move(self.LOWER_POSITION)
         return self
 
-    async def __exit__(self, *exception_data):
+    async def __aexit__(self, *exception_data):
         await self._robot.close()
 
     # TODO: remove this when we're ready
