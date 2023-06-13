@@ -124,7 +124,7 @@ class Audience:
         async with self._mutex:
             if self._count == 0 and new_value > 0:
                 await self._robot.raise_hand()
-            if should_lower_servo = self._count > 0 and new_value == 0:
+            if self._count > 0 and new_value == 0:
                 await self._robot.lower_hand()
 
             self._count = new_value
