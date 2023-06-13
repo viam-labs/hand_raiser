@@ -115,6 +115,7 @@ class Audience:
             if self._count == 0:
                 await self._robot.lower_hand()
 
+    # TODO: either test this thoroughly or remove it. It's currently unused.
     async def set_count(self, new_value):
         """
         Call this to set the number of hands raised in the audience to a certain
