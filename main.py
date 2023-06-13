@@ -44,8 +44,8 @@ class Robot:
     async def _wiggle_on_inactivity(self):
         """
         This is a background coroutine that wiggles the hand every
-        INACTIVITY_PERIOD_S seconds. It is started when the count of raised
-        hands becomes nonzero, and canceled when the count goes back to 0.
+        INACTIVITY_PERIOD_S seconds. It is started when the hand is raised,
+        and canceled when the hand is lowered.
         """
         try:
             while True:
@@ -119,8 +119,8 @@ class Audience:
     async def set_count(self, new_value):
         """
         Call this to set the number of hands raised in the audience to a certain
-        value. This is mainly used to "reset" the count of raised hands if
-        someone forgets to lower their hand.
+        value. This is mainly used to reset the count of raised hands if someone
+        forgets to lower their hand.
         """
         async with self._mutex:
             if self._count == 0 and new_value > 0:
