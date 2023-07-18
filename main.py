@@ -70,7 +70,7 @@ class Robot:
             await robot.stop()
 
     # TODO: remove this when we're ready
-    def get_pi(self):
+    def get_board(self):
         return Board.from_robot(self._client, "pi")
 
     async def _wiggle_on_inactivity(self):
@@ -166,9 +166,9 @@ class Audience:
 async def main():
     async with Robot.create(secrets.creds, secrets.address) as robot:
         audience = Audience(robot)
-        pi = robot.get_pi()
-        button = await pi.gpio_pin_by_name("18")
-        led = await pi.gpio_pin_by_name("16")
+        board = robot.get_board()
+        button = await board.gpio_pin_by_name("18")
+        led = await board.gpio_pin_by_name("16")
 
         should_raise = False
         old_state = False
