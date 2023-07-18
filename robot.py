@@ -44,7 +44,7 @@ class Robot:
         The client passed in is a RobotClient object.
         """
         self._client = client
-        self._servo = Servo.from_robot(robot._client, "servo")
+        self._servo = Servo.from_robot(self._client, "servo")
 
         # This will become an asyncio.Task when the hand is raised. It will
         # wiggle the hand when it has been raised for over INACTIVITY_PERIOD_S
@@ -55,7 +55,7 @@ class Robot:
         """
         Ideally, this would happen in __init__, but it needs to be async.
         """
-        await robot._servo.move(robot.LOWER_POSITION)
+        await self._servo.move(self.LOWER_POSITION)
 
     async def stop(self):
         """
