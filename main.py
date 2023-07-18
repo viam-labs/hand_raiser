@@ -21,8 +21,8 @@ class Robot:
             refresh_interval=0,
             dial_options=DialOptions(credentials=secrets.creds)
         )
-        self._robot = await RobotClient.at_address(secrets.address, opts)
-        self._servo = Servo.from_robot(self._robot, "servo")
+        self._client = await RobotClient.at_address(secrets.address, opts)
+        self._servo = Servo.from_robot(self._client, "servo")
 
         # This will become an asyncio.Task when the hand is raised. It will
         # wiggle the hand when it has been raised for over INACTIVITY_PERIOD_S
@@ -35,11 +35,11 @@ class Robot:
     async def __aexit__(self, *exception_data):
         if self._wiggler is not None:
             await self.lower_hand()
-        await self._robot.close()
+        await self._client.close()
 
     # TODO: remove this when we're ready
     def get_pi(self):
-        return Board.from_robot(self._robot, "pi")
+        return Board.from_robot(self._client, "pi")
 
     async def _wiggle_on_inactivity(self):
         """
