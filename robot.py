@@ -74,7 +74,8 @@ class Robot:
             while True:
                 await asyncio.sleep(self.INACTIVITY_PERIOD_S)
                 for _ in range(3):
-                    await self._servo.move(self.UPPER_POSITION + self.WIGGLE_AMOUNT)
+                    await self._servo.move(self.UPPER_POSITION +
+                                           self.WIGGLE_AMOUNT)
                     await asyncio.sleep(0.3)
                     await self._servo.move(self.UPPER_POSITION)
                     await asyncio.sleep(0.3)

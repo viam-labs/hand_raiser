@@ -8,12 +8,12 @@ import secrets
 class Audience:
     def __init__(self, robot):
         """
-        Audience keeps track of how many people have their hands up, and raises and lowers the
-        robot's hand to match. This class is thread safe.
+        Audience keeps track of how many people have their hands up, and raises
+        and lowers the robot's hand to match. This class is thread safe.
         """
         self._robot = robot
         self._mutex = asyncio.Lock()
-        self._count = 0  # Number of people in the audience with their hand raised
+        self._count = 0  # Number of people in the audience raising their hands
 
     async def increment_count(self):
         """
