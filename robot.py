@@ -2,10 +2,10 @@
 import asyncio
 from contextlib import asynccontextmanager
 
-from viam.robot.client import RobotClient
-from viam.rpc.dial import DialOptions
 from viam.components.board import Board
 from viam.components.servo import Servo
+from viam.robot.client import RobotClient
+from viam.rpc.dial import DialOptions
 
 
 @asynccontextmanager
