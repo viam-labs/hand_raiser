@@ -59,8 +59,7 @@ class Robot:
 
     async def stop(self):
         """
-        Call this to ensure the hand is lowered and then close the connection
-        with the hardware.
+        Call this to ensure the hand is definitely lowered.
         """
         if self._wiggler is not None:
             await self.lower_hand()
