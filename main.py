@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import asyncio
 
-from robot import create as create_robot
+from robot import create_robot
 import secrets
 
 

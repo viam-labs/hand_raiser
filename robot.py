@@ -9,10 +9,10 @@ from viam.components.servo import Servo
 
 
 @asynccontextmanager
-async def create(creds, address):
+async def create_robot(creds, address):
     """
-    This creates a Robot object, and then closes the connection when the context
-    manager exits.
+    This makes a connection to the hardware, creates a Robot object, and then
+    closes the connection when the context manager exits.
     """
     opts = RobotClient.Options(
         refresh_interval=0,
@@ -26,6 +26,7 @@ async def create(creds, address):
         yield robot
     finally:
         await robot.stop()
+        await client.close()
 
 
 class Robot:
@@ -64,7 +65,6 @@ class Robot:
         """
         if self._wiggler is not None:
             await self.lower_hand()
-        await self._client.close()
 
     # TODO: remove this when we're ready
     def get_board(self):
