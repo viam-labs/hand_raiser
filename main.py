@@ -18,7 +18,12 @@ class Robot:
 
     def __init__(self, client):
         """
-        client is a RobotClient object.
+        This class is in charge of raising and lowering the robot's hand, and
+        wiggling the hand if it has been raised for too long.
+
+        WARNING: this class is not thread safe!
+
+        The client passed in is a RobotClient object.
         """
         self._client = client
         self._servo = Servo.from_robot(robot._client, "servo")
@@ -29,9 +34,16 @@ class Robot:
         self._wiggler = None
 
     async def start(self):
+        """
+        Ideally, this would happen in __init__, but it needs to be async.
+        """
         await robot._servo.move(robot.LOWER_POSITION)
 
     async def stop(self):
+        """
+        Call this to ensure the hand is lowered and then close the connection
+        with the hardware.
+        """
         if self._wiggler is not None:
             await self.lower_hand()
         await self._client.close()
@@ -40,9 +52,8 @@ class Robot:
     @staticmethod
     async def create(creds, address):
         """
-        This should be considered a factory function: it initializes the
-        internals of the object. Initialization needs to be async, which is why
-        it's not in __init__().
+        This should be considered a factory function: it creates a Robot
+        object, and then closes the connection when the context manager exits.
         """
         opts = RobotClient.Options(
             refresh_interval=0,
@@ -83,8 +94,6 @@ class Robot:
         """
         Call this to move the servo to the raised position and start the task
         that wiggles the hand on inactivity.
-
-        Note: this function is not thread safe!
         """
         if self._wiggler is not None:
             print("LOGIC BUG: trying to raise already-raised hand")
@@ -96,8 +105,6 @@ class Robot:
         """
         Call this to move the servo to the lowered position and stop the
         background task that wiggles the hand once in a while.
-
-        Note: this function is not thread safe!
         """
         if self._wiggler is None:
             print("LOGIC BUG: trying to lower already-lowered hand")
@@ -110,6 +117,10 @@ class Robot:
 
 class Audience:
     def __init__(self, robot):
+        """
+        Audience keeps track of how many people have their hands up, and raises and lowers the
+        robot's hand to match. This class is thread safe.
+        """
         self._robot = robot
         self._mutex = asyncio.Lock()
         self._count = 0  # Number of people in the audience with their hand raised
