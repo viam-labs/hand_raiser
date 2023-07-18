@@ -18,8 +18,8 @@ class Audience:
     async def increment_count(self):
         """
         Call this to consider 1 extra person in the audience to have raised
-        their hand. If this is the first person to do so, we'll raise our
-        servo, and otherwise we take no action.
+        their hand. If this is the first person to do so, we'll raise the
+        robot's hand, and otherwise we take no action.
         """
         async with self._mutex:
             self._count += 1
@@ -30,7 +30,7 @@ class Audience:
         """
         Call this to consider 1 extra person in the audience to have lowered
         their hand. If this is the last person who had their hand raised, we'll
-        lower our servo, and otherwise take no action.
+        lower the robot's hand, and otherwise take no action.
         """
         async with self._mutex:
             self._count -= 1
