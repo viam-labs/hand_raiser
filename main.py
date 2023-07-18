@@ -16,6 +16,26 @@ class Robot:
     WIGGLE_AMOUNT = 5
     INACTIVITY_PERIOD_S = 5
 
+    def __init__(self, client):
+        """
+        client is a RobotClient object.
+        """
+        self._client = client
+        self._servo = Servo.from_robot(robot._client, "servo")
+
+        # This will become an asyncio.Task when the hand is raised. It will
+        # wiggle the hand when it has been raised for over INACTIVITY_PERIOD_S
+        # seconds.
+        self._wiggler = None
+
+    async def start(self):
+        await robot._servo.move(robot.LOWER_POSITION)
+
+    async def stop(self):
+        if self._wiggler is not None:
+            await self.lower_hand()
+        await self._client.close()
+
     @asynccontextmanager
     @staticmethod
     async def create():
@@ -30,21 +50,13 @@ class Robot:
         )
         client = await RobotClient.at_address(secrets.address, opts)
 
-        robot = Robot()
-        robot._client = client
-        robot._servo = Servo.from_robot(robot._client, "servo")
-        # This will become an asyncio.Task when the hand is raised. It will
-        # wiggle the hand when it has been raised for over INACTIVITY_PERIOD_S
-        # seconds.
-        robot._wiggler = None
+        robot = Robot(client)
+        await robot.start()
 
-        await robot._servo.move(robot.LOWER_POSITION)
         try:
             yield robot
         finally:
-            if robot._wiggler is not None:
-                await robot.lower_hand()
-            await robot._client.close()
+            await robot.stop()
 
     # TODO: remove this when we're ready
     def get_pi(self):
