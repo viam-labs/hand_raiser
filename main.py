@@ -38,7 +38,7 @@ class Robot:
 
     @asynccontextmanager
     @staticmethod
-    async def create():
+    async def create(creds, address):
         """
         This should be considered a factory function: it initializes the
         internals of the object. Initialization needs to be async, which is why
@@ -46,9 +46,9 @@ class Robot:
         """
         opts = RobotClient.Options(
             refresh_interval=0,
-            dial_options=DialOptions(credentials=secrets.creds)
+            dial_options=DialOptions(credentials=creds)
         )
-        client = await RobotClient.at_address(secrets.address, opts)
+        client = await RobotClient.at_address(address, opts)
 
         robot = Robot(client)
         await robot.start()
@@ -153,7 +153,7 @@ class Audience:
 
 
 async def main():
-    async with Robot.create() as robot:
+    async with Robot.create(secrets.creds, secrets.address) as robot:
         audience = Audience(robot)
         pi = robot.get_pi()
         button = await pi.gpio_pin_by_name("18")
