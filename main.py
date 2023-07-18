@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
-import contextlib
+from contextlib import asynccontextmanager
 
 from viam.robot.client import RobotClient
 from viam.rpc.dial import DialOptions
@@ -16,30 +16,35 @@ class Robot:
     WIGGLE_AMOUNT = 5
     INACTIVITY_PERIOD_S = 5
 
-    async def __aenter__(self):
+    @asynccontextmanager
+    @staticmethod
+    async def create():
         """
-        This should be considered the constructor: it initializes the internals of the object.
-        Initialization needs to be async, which is why it's not in __init__().
+        This should be considered a factory function: it initializes the
+        internals of the object. Initialization needs to be async, which is why
+        it's not in __init__().
         """
         opts = RobotClient.Options(
             refresh_interval=0,
             dial_options=DialOptions(credentials=secrets.creds)
         )
-        self._client = await RobotClient.at_address(secrets.address, opts)
-        self._servo = Servo.from_robot(self._client, "servo")
+        client = await RobotClient.at_address(secrets.address, opts)
 
+        robot = Robot()
+        robot._client = client
+        robot._servo = Servo.from_robot(robot._client, "servo")
         # This will become an asyncio.Task when the hand is raised. It will
         # wiggle the hand when it has been raised for over INACTIVITY_PERIOD_S
         # seconds.
-        self._wiggler = None
+        robot._wiggler = None
 
-        await self._servo.move(self.LOWER_POSITION)
-        return self
-
-    async def __aexit__(self, *exception_data):
-        if self._wiggler is not None:
-            await self.lower_hand()
-        await self._client.close()
+        await robot._servo.move(robot.LOWER_POSITION)
+        try:
+            yield robot
+        finally:
+            if robot._wiggler is not None:
+                await robot.lower_hand()
+            await robot._client.close()
 
     # TODO: remove this when we're ready
     def get_pi(self):
@@ -136,7 +141,7 @@ class Audience:
 
 
 async def main():
-    async with Robot() as robot:
+    async with Robot.create() as robot:
         audience = Audience(robot)
         pi = robot.get_pi()
         button = await pi.gpio_pin_by_name("18")
