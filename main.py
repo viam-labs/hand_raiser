@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import asyncio
 
-from robot import Robot
+from robot import create as create_robot
 import secrets
 
 
@@ -54,7 +54,7 @@ class Audience:
 
 
 async def main():
-    async with Robot.create(secrets.creds, secrets.address) as robot:
+    async with create_robot(secrets.creds, secrets.address) as robot:
         audience = Audience(robot)
         board = robot.get_board()
         button = await board.gpio_pin_by_name("18")

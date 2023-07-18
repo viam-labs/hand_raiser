@@ -8,6 +8,26 @@ from viam.components.board import Board
 from viam.components.servo import Servo
 
 
+@asynccontextmanager
+async def create(creds, address):
+    """
+    This creates a Robot object, and then closes the connection when the context
+    manager exits.
+    """
+    opts = RobotClient.Options(
+        refresh_interval=0,
+        dial_options=DialOptions(credentials=creds)
+    )
+    client = await RobotClient.at_address(address, opts)
+    robot = Robot(client)
+
+    await robot.start()
+    try:
+        yield robot
+    finally:
+        await robot.stop()
+
+
 class Robot:
     UPPER_POSITION = 30
     LOWER_POSITION = 0
@@ -45,27 +65,6 @@ class Robot:
         if self._wiggler is not None:
             await self.lower_hand()
         await self._client.close()
-
-    @asynccontextmanager
-    @staticmethod
-    async def create(creds, address):
-        """
-        This should be considered a factory function: it creates a Robot
-        object, and then closes the connection when the context manager exits.
-        """
-        opts = RobotClient.Options(
-            refresh_interval=0,
-            dial_options=DialOptions(credentials=creds)
-        )
-        client = await RobotClient.at_address(address, opts)
-
-        robot = Robot(client)
-        await robot.start()
-
-        try:
-            yield robot
-        finally:
-            await robot.stop()
 
     # TODO: remove this when we're ready
     def get_board(self):
