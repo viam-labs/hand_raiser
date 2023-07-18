@@ -17,6 +17,10 @@ class Robot:
     INACTIVITY_PERIOD_S = 5
 
     async def __aenter__(self):
+        """
+        This should be considered the constructor: it initializes the internals of the object.
+        Initialization needs to be async, which is why it's not in __init__().
+        """
         opts = RobotClient.Options(
             refresh_interval=0,
             dial_options=DialOptions(credentials=secrets.creds)
