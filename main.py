@@ -54,9 +54,8 @@ class Audience:
 
 
 async def main():
-    async with create_robot(secrets.creds, secrets.address) as robot:
+    async with create_robot(secrets.creds, secrets.address) as (robot, board):
         audience = Audience(robot)
-        board = robot.get_board()
         button = await board.gpio_pin_by_name("18")
         led = await board.gpio_pin_by_name("16")
 

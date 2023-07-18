@@ -18,11 +18,14 @@ async def create_robot(creds, address):
         dial_options=DialOptions(credentials=creds)
     )
     client = await RobotClient.at_address(address, opts)
-    robot = Robot(client)
+    servo = Servo.from_robot(client, "servo")
+    board = Board.from_robot(client, "pi")
 
+    robot = Robot(servo)
     await robot.start()
     try:
-        yield robot
+        # TODO: don't return the board when we no longer need to.
+        yield robot, board
     finally:
         await robot.stop()
         await client.close()
@@ -34,17 +37,14 @@ class Robot:
     WIGGLE_AMOUNT = 5
     INACTIVITY_PERIOD_S = 5
 
-    def __init__(self, client):
+    def __init__(self, servo):
         """
         This class is in charge of raising and lowering the robot's hand, and
         wiggling the hand if it has been raised for too long.
 
         WARNING: this class is not thread safe!
-
-        The client passed in is a RobotClient object.
         """
-        self._client = client
-        self._servo = Servo.from_robot(self._client, "servo")
+        self._servo = servo
 
         # This will become an asyncio.Task when the hand is raised. It will
         # wiggle the hand when it has been raised for over INACTIVITY_PERIOD_S
@@ -63,10 +63,6 @@ class Robot:
         """
         if self._wiggler is not None:
             await self.lower_hand()
-
-    # TODO: remove this when we're ready
-    def get_board(self):
-        return Board.from_robot(self._client, "pi")
 
     async def _wiggle_on_inactivity(self):
         """
