@@ -1,31 +1,27 @@
 #!/usr/bin/env python3
 import asyncio
 
+from quart import Quart
+
 from audience import Audience
 from robot import create_robot
 import secrets
 
 
+SERVER_PORT = 8090
+
+
 async def main():
     async with create_robot(secrets.creds, secrets.address) as (robot, board):
+        app = Quart(__name__)
         audience = Audience(robot)
-        button = await board.gpio_pin_by_name("18")
-        led = await board.gpio_pin_by_name("16")
 
-        should_raise = False
-        old_state = False
-        while True:
-            button_state = await button.get()
-            if button_state != old_state:
-                print("button state has changed to {}!".format(button_state))
-                if button_state:
-                    should_raise = not should_raise
-                    if should_raise:
-                        await audience.increment_count()
-                    else:
-                        await audience.decrement_count()
-            old_state = button_state
-            await led.set(button_state)
+        @app.route("/count_hands/<int:count>", methods=["POST"])
+        async def count_hands(total):
+            await audience.set_count(total)
+            return "Count has been set to {}\n".format(total)
+
+        await app.run_task(host="0.0.0.0", port=SERVER_PORT)
 
 
 if __name__ == "__main__":
