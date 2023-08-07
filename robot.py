@@ -1,7 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager
 
-from viam.components.board import Board
 from viam.components.servo import Servo
 from viam.robot.client import RobotClient
 from viam.rpc.dial import DialOptions
@@ -19,13 +18,11 @@ async def create_robot(creds, address):
     )
     client = await RobotClient.at_address(address, opts)
     servo = Servo.from_robot(client, "servo")
-    board = Board.from_robot(client, "pi")
 
     robot = Robot(servo)
     await robot.start()
     try:
-        # TODO: don't return the board when we no longer need to.
-        yield robot, board
+        yield robot
     finally:
         await robot.stop()
         await client.close()

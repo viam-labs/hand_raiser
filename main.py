@@ -12,7 +12,7 @@ SERVER_PORT = 8090
 
 
 async def main():
-    async with create_robot(secrets.creds, secrets.address) as (robot, board):
+    async with create_robot(secrets.creds, secrets.address) as robot:
         app = Quart(__name__)
         audience = Audience(robot)
 
