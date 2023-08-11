@@ -16,8 +16,8 @@ async def main():
         app = Quart(__name__)
         audience = Audience(robot)
 
-        @app.route("/count_hands/<int:total>", methods=["POST"])
-        async def count_hands(total):
+        @app.route("/hand_count/<int:total>", methods=["POST"])
+        async def set_hand_count(total):
             await audience.set_count(total)
             return "Count has been set to {}\n".format(total)
 
