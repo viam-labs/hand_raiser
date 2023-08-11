@@ -21,6 +21,8 @@ async def main():
             await audience.set_count(total)
             return "Count has been set to {}\n".format(total)
 
+        # Use 0.0.0.0 to accept external requests, or 127.0.0.1 to accept only
+        # requests originating from within this computer.
         await app.run_task(host="0.0.0.0", port=SERVER_PORT)
 
 
