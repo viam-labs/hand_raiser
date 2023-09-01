@@ -1,4 +1,4 @@
-# This should be copied into /etc/system.d/system/
+# This should be copied into /etc/systemd/system/
 # Then, you should run `sudo systemctl daemon-reload`
 
 [Unit]
