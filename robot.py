@@ -29,9 +29,9 @@ async def create_robot(creds, address):
 
 
 class Robot:
-    UPPER_POSITION = 30
-    LOWER_POSITION = 0
-    WIGGLE_AMOUNT = 5
+    UPPER_POSITION = 93
+    LOWER_POSITION = 158
+    WIGGLE_AMOUNT = 7
     WIGGLE_DELAY_S = 0.5
     INACTIVITY_PERIOD_S = 5
 
