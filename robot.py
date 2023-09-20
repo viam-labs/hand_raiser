@@ -29,9 +29,10 @@ async def create_robot(creds, address):
 
 
 class Robot:
-    UPPER_POSITION = 30
-    LOWER_POSITION = 0
-    WIGGLE_AMOUNT = 5
+    UPPER_POSITION = 93
+    LOWER_POSITION = 152
+    WIGGLE_AMOUNT = 7  # Move this much left and right of UPPER_POSITION
+    WIGGLE_DELAY_S = 0.5
     INACTIVITY_PERIOD_S = 5
 
     def __init__(self, servo):
@@ -73,9 +74,12 @@ class Robot:
                 for _ in range(3):
                     await self._servo.move(self.UPPER_POSITION +
                                            self.WIGGLE_AMOUNT)
-                    await asyncio.sleep(0.3)
-                    await self._servo.move(self.UPPER_POSITION)
-                    await asyncio.sleep(0.3)
+                    await asyncio.sleep(self.WIGGLE_DELAY_S)
+                    await self._servo.move(self.UPPER_POSITION -
+                                           self.WIGGLE_AMOUNT)
+                    await asyncio.sleep(self.WIGGLE_DELAY_S)
+                # Now that we're done wiggle for now, put the arm back up.
+                await self._servo.move(self.UPPER_POSITION)
         except asyncio.CancelledError:
             return
 
