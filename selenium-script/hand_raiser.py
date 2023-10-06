@@ -31,45 +31,18 @@ class HandRaiser():
   def sign_in(self):
     # visit Zoom link + setup window
     url = "https://viam.zoom.us/j/85967895337?pwd=SkQ5dFRGOVlTbnRQNVhIdkJzdmFIUT09"
-
     updated_url = url.replace("viam.zoom.us/j", "app.zoom.us/wc/join")
+
     self.driver.get(updated_url)
-    #"https://viam.zoom.us/j/85967895337?pwd=SkQ5dFRGOVlTbnRQNVhIdkJzdmFIUT09"
-    #"https://app.zoom.us/wc/join/85967895337?pwd=SkQ5dFRGOVlTbnRQNVhIdkJzdmFIUT09&_x_zm_rtaid=6WIbgDSCQLml_hVKM5H6qQ.1696623543056.91772f0dd81e2f9cdb4313364bd71220&_x_zm_rhtaid=899&from=pwa"
     self.driver.set_window_size(1140, 790)
 
-    # dismiss alert
-
-    # time.sleep(2)
-    # print("about to send escape...")
-    # ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
-    # print("sent escape!")
-    # time.sleep(2)
-
-    # print("about to wait for alert...")
-    # WebDriverWait(self.driver, 10).until(EC.alert_is_present())
-    # alert = self.driver.switch_to.alert
-    # alert.dismiss()
-    # print("done waiting for alert!")
-
-    # click join
-    #self.driver.find_element(By.LINK_TEXT, "Join from Your Browser").click()
-
-    # print("looking for input for iframe...")
-    # WebDriverWait(self.driver, 5).until(
-    #     lambda d: len(self.driver.find_elements(By.ID, "webclient")) != 0)
-    # self.driver.find_element(By.ID, "input-for-name").send_keys("Hand Raiser")
-
     # set name for meeting
-    print("looking for input for name...")
     WebDriverWait(self.driver, 5).until(
         lambda d: len(self.driver.find_elements(By.ID, "input-for-name")) != 0)
     self.driver.find_element(By.ID, "input-for-name").send_keys("Hand Raiser")
 
     # open the participants menu
     self.driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
-    #self.driver.find_element(By.CSS_SELECTOR, ".footer__button-wrap:nth-child(1) .footer-button-base__img-layer").click()
-    time.sleep(1)
 
     # We want to click on an item in the class "SvgParticipantsDefault". However, that element is
     # not clickable, and instead throws an exception that the click would be intercepted by its
