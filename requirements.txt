@@ -1,3 +1,2 @@
-quart>=0.18.4
-viam-sdk>=0.2.18
 selenium>=4.13.0
+viam-sdk>=0.2.18

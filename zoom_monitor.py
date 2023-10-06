@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 
 
-class SeleniumBrowser():
+class ZoomMonitor():
     def __init__(self, url):
         self.driver = Chrome()
         self.vars = {}
@@ -48,7 +48,7 @@ class SeleniumBrowser():
             lambda _: len(self.driver.find_elements(
                 By.CLASS_NAME, "participants-wrapper__inner")) != 0)
 
-    def get_hands(self):
+    def count_hands(self):
         # We want to find an SVG element whose class is "lazy-svg-icon__icon lazy-icon-nvf/270b".
         # However, `find_elements(By.CLASS_NAME, ...)` has problems when the class name contains a
         # slash. So, instead we use xpath to find class names that contain "270b" (the hex value of
