@@ -9,16 +9,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 class ZoomMonitor():
     def __init__(self, url):
         self.driver = Chrome()
-        self.sign_in(url)
 
-    def clean_up(self):
-        self.driver.quit()
-
-    def wait_for_element(self, approach, value):  # Helper function
-        WebDriverWait(self.driver, 5).until(lambda _:
-            len(self.driver.find_elements(approach, value)) != 0)
-
-    def sign_in(self, url):
         # The links that we receive prompt you to open the Zoom app if it's
         # available. Replace the domain name to skip that.
         updated_url = url.replace("viam.zoom.us/j", "app.zoom.us/wc/join")
@@ -51,6 +42,13 @@ class ZoomMonitor():
 
         # Now that we've clicked the participants list, wait until it shows up.
         self.wait_for_element(By.CLASS_NAME, "participants-wrapper__inner")
+
+    def clean_up(self):
+        self.driver.quit()
+
+    def wait_for_element(self, approach, value):  # Helper function
+        WebDriverWait(self.driver, 5).until(lambda _:
+            len(self.driver.find_elements(approach, value)) != 0)
 
     def count_hands(self):
         # We want to find an SVG element whose class is
