@@ -10,8 +10,8 @@ from selenium.webdriver.chrome.options import Options
 class SeleniumBrowser():
   def setup_method(self):
     chrome_options = Options()
-    # keeps the window open indefinitely
-    chrome_options.add_experimental_option("detach", True)
+    ## keeps the window open indefinitely
+    #chrome_options.add_experimental_option("detach", True)
     self.driver = webdriver.Chrome(options=chrome_options)
     self.vars = {}
 
@@ -40,7 +40,7 @@ class SeleniumBrowser():
     # all of those divs, and then find the one that contains the participants image.
     WebDriverWait(self.driver, 5).until(
         lambda d: len(self.driver.find_elements(By.CLASS_NAME, "SvgParticipantsDefault")) != 0)
-    time.sleep(3)
+    time.sleep(1)
     for outer in self.driver.find_elements(By.CLASS_NAME, "footer-button-base__img-layer"):
         try:
             outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
@@ -53,10 +53,6 @@ class SeleniumBrowser():
     WebDriverWait(self.driver, 5).until(
         lambda d: len(self.driver.find_elements(By.CLASS_NAME, "participants-wrapper__inner")) != 0)
     participants_data = self.driver.find_element(By.CLASS_NAME, "participants-wrapper__inner")
-    # query page for hand icon
-    #return len(self.driver.find_elements(By.CLASS_NAME, "lazy-svg-icon__icon lazy-icon-nvf\\/270b"))
-    #return len(self.driver.find_elements(By.XPATH, "//*[contains(@class, '270b']"))
     results = participants_data.find_elements(
             By.XPATH, "//*[@class='participants-wrapper__inner']//*[contains(@class, '270b')]")
-    #print(results)
     return len(results)

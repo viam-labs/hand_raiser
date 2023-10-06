@@ -15,7 +15,6 @@ def run():
         hands = test.get_hands()
         print(hands)
   finally:
-      #test.teardown_method()
-      pass
+      test.teardown_method()
 
 run()
