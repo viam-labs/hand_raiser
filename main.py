@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
-
-from quart import Quart
+import sys
 
 from audience import Audience
 from robot import create_robot
@@ -13,7 +12,7 @@ SERVER_PORT = 8090
 
 
 async def main():
-    zoom = ZoomMonitor("https://viam.zoom.us/j/85967895337?pwd=SkQ5dFRGOVlTbnRQNVhIdkJzdmFIUT09")
+    zoom = ZoomMonitor(sys.argv[1])
     async with create_robot(secrets.creds, secrets.address) as robot:
         audience = Audience(robot)
         try:
