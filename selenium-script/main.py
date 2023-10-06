@@ -3,7 +3,7 @@ import hand_raiser
 import time
 
 def run():
-  test = hand_raiser.HandRaiser()
+  test = hand_raiser.SeleniumBrowser()
 
   test.setup_method()
   test.sign_in()

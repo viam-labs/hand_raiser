@@ -7,7 +7,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 
 
-class HandRaiser():
+class SeleniumBrowser():
   def setup_method(self):
     chrome_options = Options()
     #chrome_options.add_experimental_option("prefs", {"protocol_handler.excluded_schemes.tel": false})
