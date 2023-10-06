@@ -21,7 +21,7 @@ async def main():
                 await audience.set_count(count)
                 await asyncio.sleep(1)
         finally:
-            zoom.teardown_method()
+            zoom.clean_up()
 
 
 if __name__ == "__main__":
