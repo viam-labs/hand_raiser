@@ -14,6 +14,10 @@ class ZoomMonitor():
     def clean_up(self):
         self.driver.quit()
 
+    def wait_for_element(self, approach, value):  # Helper function
+        WebDriverWait(self.driver, 5).until(lambda _:
+            len(self.driver.find_elements(approach, value)) != 0)
+
     def sign_in(self, url):
         # The links that we receive prompt you to open the Zoom app if it's
         # available. Replace the domain name to skip that.
@@ -21,15 +25,12 @@ class ZoomMonitor():
         self.driver.get(updated_url)
 
         # Set our name and join the meeting
-        WebDriverWait(self.driver, 5).until(lambda _:
-            len(self.driver.find_elements(By.ID, "input-for-name")) != 0)
+        self.wait_for_element(By.ID, "input-for-name")
         name_field = self.driver.find_element(By.ID, "input-for-name")
         name_field.send_keys("Hand Raiser Bot")
         self.driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
 
-        WebDriverWait(self.driver, 5).until(lambda _:
-            len(self.driver.find_elements(
-                By.CLASS_NAME, "SvgParticipantsDefault")) != 0)
+        self.wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
         time.sleep(1) # The DOM isn't all set up yet; wait a little longer
 
         # We want to click on an item in the class "SvgParticipantsDefault" to
@@ -49,9 +50,7 @@ class ZoomMonitor():
             break # We found it! Skip the rest of the footer buttons.
 
         # Now that we've clicked the participants list, wait until it shows up.
-        WebDriverWait(self.driver, 5).until(
-            lambda _: len(self.driver.find_elements(
-                By.CLASS_NAME, "participants-wrapper__inner")) != 0)
+        self.wait_for_element(By.CLASS_NAME, "participants-wrapper__inner")
 
     def count_hands(self):
         # We want to find an SVG element whose class is
