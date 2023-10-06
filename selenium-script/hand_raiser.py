@@ -2,6 +2,7 @@
 import json
 import time
 from selenium import webdriver
+from selenium.common import exceptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
@@ -11,37 +12,80 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.alert import Alert
 from selenium.webdriver.chrome.options import Options
 
+from selenium.webdriver.common.keys import Keys
+from selenium import webdriver
+
+
 class HandRaiser():
   def setup_method(self):
     chrome_options = Options()
+    #chrome_options.add_experimental_option("prefs", {"protocol_handler.excluded_schemes.tel": false})
     # keeps the window open indefinitely
     chrome_options.add_experimental_option("detach", True)
     self.driver = webdriver.Chrome(options=chrome_options)
     self.vars = {}
-  
+
   def teardown_method(self, method):
     self.driver.quit()
-  
+
   def sign_in(self):
     # visit Zoom link + setup window
-    self.driver.get("https://viam.zoom.us/j/81068375503?pwd=6pPUih4URPrhfH8ebjpNTnX7uqVwq0.1")
-    self.driver.set_window_size(1440, 790)
+    url = "https://viam.zoom.us/j/85967895337?pwd=SkQ5dFRGOVlTbnRQNVhIdkJzdmFIUT09"
+
+    updated_url = url.replace("viam.zoom.us/j", "app.zoom.us/wc/join")
+    self.driver.get(updated_url)
+    #"https://viam.zoom.us/j/85967895337?pwd=SkQ5dFRGOVlTbnRQNVhIdkJzdmFIUT09"
+    #"https://app.zoom.us/wc/join/85967895337?pwd=SkQ5dFRGOVlTbnRQNVhIdkJzdmFIUT09&_x_zm_rtaid=6WIbgDSCQLml_hVKM5H6qQ.1696623543056.91772f0dd81e2f9cdb4313364bd71220&_x_zm_rhtaid=899&from=pwa"
+    self.driver.set_window_size(1140, 790)
 
     # dismiss alert
+
+    # time.sleep(2)
+    # print("about to send escape...")
+    # ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
+    # print("sent escape!")
+    # time.sleep(2)
+
+    # print("about to wait for alert...")
     # WebDriverWait(self.driver, 10).until(EC.alert_is_present())
     # alert = self.driver.switch_to.alert
     # alert.dismiss()
-    
+    # print("done waiting for alert!")
+
     # click join
-    self.driver.find_element(By.LINK_TEXT, "Join from Your Browser").click()
+    #self.driver.find_element(By.LINK_TEXT, "Join from Your Browser").click()
+
+    # print("looking for input for iframe...")
+    # WebDriverWait(self.driver, 5).until(
+    #     lambda d: len(self.driver.find_elements(By.ID, "webclient")) != 0)
+    # self.driver.find_element(By.ID, "input-for-name").send_keys("Hand Raiser")
 
     # set name for meeting
-    WebDriverWait(self.driver, 5).until(lambda d : self.driver.find_element(By.ID, "input-for-name").is_displayed())
+    print("looking for input for name...")
+    WebDriverWait(self.driver, 5).until(
+        lambda d: len(self.driver.find_elements(By.ID, "input-for-name")) != 0)
     self.driver.find_element(By.ID, "input-for-name").send_keys("Hand Raiser")
 
     # open the participants menu
-    # self.driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
-    # self.driver.find_element(By.CSS_SELECTOR, ".footer__button-wrap:nth-child(1) .footer-button-base__img-layer").click()
+    self.driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
+    #self.driver.find_element(By.CSS_SELECTOR, ".footer__button-wrap:nth-child(1) .footer-button-base__img-layer").click()
+    time.sleep(1)
+
+    # We want to click on an item in the class "SvgParticipantsDefault". However, that element is
+    # not clickable, and instead throws an exception that the click would be intercepted by its
+    # parant element, a div in the class "footer-button-base__img-layer". So, instead lets look for
+    # all of those divs, and then find the one that contains the participants image.
+    WebDriverWait(self.driver, 5).until(
+        lambda d: len(self.driver.find_elements(By.CLASS_NAME, "SvgParticipantsDefault")) != 0)
+    time.sleep(3)
+    for outer in self.driver.find_elements(By.CLASS_NAME, "footer-button-base__img-layer"):
+        try:
+            outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
+        except exceptions.NoSuchElementException:
+            continue # wrong footer element, try the next one
+        outer.click()
+        break # We found it! Skip the rest of the footer buttons.
+
 
   def get_hands(self):
     # query page for hand icon
