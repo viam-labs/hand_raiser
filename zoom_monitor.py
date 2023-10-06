@@ -1,9 +1,19 @@
+from contextlib import contextmanager
 import time
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
+
+
+@contextmanager
+def monitor_zoom(url):
+    zoom = ZoomMonitor(url)
+    try:
+        yield zoom
+    finally:
+        zoom.clean_up()
 
 
 class ZoomMonitor():
