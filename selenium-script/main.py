@@ -4,12 +4,9 @@ import time
 
 
 def run():
-    test = hand_raiser.SeleniumBrowser()
+    test = hand_raiser.SeleniumBrowser(
+        "https://viam.zoom.us/j/85967895337?pwd=SkQ5dFRGOVlTbnRQNVhIdkJzdmFIUT09")
 
-    test.setup_method()
-    test.sign_in()
-
-    # once signed in, poll the page for hand icons
     try:
         while True:
             time.sleep(1)
