@@ -8,10 +8,14 @@ def run():
   test.setup_method()
   test.sign_in()
 
-  # # once signed in, poll the page for hand icons
-  # while True:
-  #   time.sleep(1)
-  #   hands = test.get_hands()
-  #   print(hands)
+  # once signed in, poll the page for hand icons
+  try:
+      while True:
+        time.sleep(1)
+        hands = test.get_hands()
+        print(hands)
+  finally:
+      #test.teardown_method()
+      pass
 
 run()

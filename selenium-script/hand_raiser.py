@@ -10,13 +10,12 @@ from selenium.webdriver.chrome.options import Options
 class SeleniumBrowser():
   def setup_method(self):
     chrome_options = Options()
-    #chrome_options.add_experimental_option("prefs", {"protocol_handler.excluded_schemes.tel": false})
     # keeps the window open indefinitely
     chrome_options.add_experimental_option("detach", True)
     self.driver = webdriver.Chrome(options=chrome_options)
     self.vars = {}
 
-  def teardown_method(self, method):
+  def teardown_method(self):
     self.driver.quit()
 
   def sign_in(self):
@@ -50,7 +49,14 @@ class SeleniumBrowser():
         outer.click()
         break # We found it! Skip the rest of the footer buttons.
 
-
   def get_hands(self):
+    WebDriverWait(self.driver, 5).until(
+        lambda d: len(self.driver.find_elements(By.CLASS_NAME, "participants-wrapper__inner")) != 0)
+    participants_data = self.driver.find_element(By.CLASS_NAME, "participants-wrapper__inner")
     # query page for hand icon
-    return self.driver.find_element(By.CSS_SELECTOR, ".lazy-svg-icon__icon .lazy-icon-nvf/270b")
+    #return len(self.driver.find_elements(By.CLASS_NAME, "lazy-svg-icon__icon lazy-icon-nvf\\/270b"))
+    #return len(self.driver.find_elements(By.XPATH, "//*[contains(@class, '270b']"))
+    results = participants_data.find_elements(
+            By.XPATH, "//*[@class='participants-wrapper__inner']//*[contains(@class, '270b')]")
+    #print(results)
+    return len(results)
