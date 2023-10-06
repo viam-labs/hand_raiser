@@ -8,51 +8,52 @@ from selenium.webdriver.chrome.options import Options
 
 
 class SeleniumBrowser():
-  def setup_method(self):
-    chrome_options = Options()
-    ## keeps the window open indefinitely
-    #chrome_options.add_experimental_option("detach", True)
-    self.driver = webdriver.Chrome(options=chrome_options)
-    self.vars = {}
+    def setup_method(self):
+        chrome_options = Options()
+        ## keeps the window open indefinitely
+        #chrome_options.add_experimental_option("detach", True)
+        self.driver = webdriver.Chrome(options=chrome_options)
+        self.vars = {}
 
-  def teardown_method(self):
-    self.driver.quit()
+    def teardown_method(self):
+        self.driver.quit()
 
-  def sign_in(self):
-    # visit Zoom link + setup window
-    url = "https://viam.zoom.us/j/85967895337?pwd=SkQ5dFRGOVlTbnRQNVhIdkJzdmFIUT09"
-    updated_url = url.replace("viam.zoom.us/j", "app.zoom.us/wc/join")
+    def sign_in(self):
+        # visit Zoom link + setup window
+        url = "https://viam.zoom.us/j/85967895337?pwd=SkQ5dFRGOVlTbnRQNVhIdkJzdmFIUT09"
+        updated_url = url.replace("viam.zoom.us/j", "app.zoom.us/wc/join")
 
-    self.driver.get(updated_url)
-    self.driver.set_window_size(1140, 790)
+        self.driver.get(updated_url)
+        self.driver.set_window_size(1140, 790)
 
-    # set name for meeting
-    WebDriverWait(self.driver, 5).until(
-        lambda d: len(self.driver.find_elements(By.ID, "input-for-name")) != 0)
-    self.driver.find_element(By.ID, "input-for-name").send_keys("Hand Raiser")
+        # set name for meeting
+        WebDriverWait(self.driver, 5).until(
+            lambda _: len(self.driver.find_elements(By.ID, "input-for-name")) != 0)
+        self.driver.find_element(By.ID, "input-for-name").send_keys("Hand Raiser")
 
-    # open the participants menu
-    self.driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
+        # open the participants menu
+        self.driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
 
-    # We want to click on an item in the class "SvgParticipantsDefault". However, that element is
-    # not clickable, and instead throws an exception that the click would be intercepted by its
-    # parant element, a div in the class "footer-button-base__img-layer". So, instead lets look for
-    # all of those divs, and then find the one that contains the participants image.
-    WebDriverWait(self.driver, 5).until(
-        lambda d: len(self.driver.find_elements(By.CLASS_NAME, "SvgParticipantsDefault")) != 0)
-    time.sleep(1) # The DOM isn't all set up yet
-    for outer in self.driver.find_elements(By.CLASS_NAME, "footer-button-base__img-layer"):
-        try:
-            outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
-        except exceptions.NoSuchElementException:
-            continue # wrong footer element, try the next one
-        outer.click()
-        break # We found it! Skip the rest of the footer buttons.
+        # We want to click on an item in the class "SvgParticipantsDefault". However, that element
+        # is not clickable, and instead throws an exception that the click would be intercepted by
+        # its parant element, a div in the class "footer-button-base__img-layer". So, instead lets
+        # look for all of those divs, and then find the one that contains the participants image.
+        WebDriverWait(self.driver, 5).until(
+            lambda _: len(self.driver.find_elements(By.CLASS_NAME, "SvgParticipantsDefault")) != 0)
+        time.sleep(1) # The DOM isn't all set up yet
+        for outer in self.driver.find_elements(By.CLASS_NAME, "footer-button-base__img-layer"):
+            try:
+                outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
+            except exceptions.NoSuchElementException:
+                continue # wrong footer element, try the next one
+            outer.click()
+            break # We found it! Skip the rest of the footer buttons.
 
-  def get_hands(self):
-    WebDriverWait(self.driver, 5).until(
-        lambda d: len(self.driver.find_elements(By.CLASS_NAME, "participants-wrapper__inner")) != 0)
-    participants_data = self.driver.find_element(By.CLASS_NAME, "participants-wrapper__inner")
-    results = participants_data.find_elements(
+    def get_hands(self):
+        WebDriverWait(self.driver, 5).until(
+            lambda _: len(self.driver.find_elements(
+                By.CLASS_NAME, "participants-wrapper__inner")) != 0)
+        participants_data = self.driver.find_element(By.CLASS_NAME, "participants-wrapper__inner")
+        results = participants_data.find_elements(
             By.XPATH, "//*[@class='participants-wrapper__inner']//*[contains(@class, '270b')]")
-    return len(results)
+        return len(results)
