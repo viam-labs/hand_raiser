@@ -40,7 +40,7 @@ class SeleniumBrowser():
     # all of those divs, and then find the one that contains the participants image.
     WebDriverWait(self.driver, 5).until(
         lambda d: len(self.driver.find_elements(By.CLASS_NAME, "SvgParticipantsDefault")) != 0)
-    time.sleep(1)
+    time.sleep(1) # The DOM isn't all set up yet
     for outer in self.driver.find_elements(By.CLASS_NAME, "footer-button-base__img-layer"):
         try:
             outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
