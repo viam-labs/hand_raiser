@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 import time
+import urllib.parse
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver import Chrome
@@ -20,8 +21,17 @@ class ZoomMonitor():
     def __init__(self, url):
         self.driver = Chrome()
 
-        # The links that we receive prompt you to open the Zoom app if it's
-        # available. Replace the domain name to skip that.
+        # Google Calendar wraps its links in a redirect. Check for that first
+        # and remove it if relevant. The "real" URL is stored in the `q`
+        # parameter in the CGI arguments.
+        parsed_url = urllib.parse.urlparse(url)
+        if "google.com" in parsed_url.netloc:
+            cgi_params = urllib.parse.parse_qs(parsed_url.query)
+            url = cgi_params["q"][0]
+
+        # The links that we receive from Zoom prompt you to open the Zoom app
+        # if it's available. Replace the domain name and first couple
+        # directories in the path to skip that.
         updated_url = f"https://app.zoom.us/wc/join/{url.split('/')[-1]}"
         self.driver.get(updated_url)
 
