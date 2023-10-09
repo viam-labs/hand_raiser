@@ -22,7 +22,7 @@ class ZoomMonitor():
 
         # The links that we receive prompt you to open the Zoom app if it's
         # available. Replace the domain name to skip that.
-        updated_url = url.replace("viam.zoom.us/j", "app.zoom.us/wc/join")
+        updated_url = f"https://app.zoom.us/wc/join/{url.split('/')[-1]}"
         self.driver.get(updated_url)
 
         # Set our name and join the meeting
