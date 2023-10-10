@@ -2,7 +2,8 @@ from contextlib import contextmanager
 import time
 import urllib.parse
 
-from selenium.common.exceptions import ElementClickInterceptedException, NoSuchElementException
+from selenium.common.exceptions import (ElementClickInterceptedException,
+                                        NoSuchElementException)
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -46,10 +47,10 @@ class ZoomMonitor():
         # figure out what. So, instead let's just try this, and sleep before
         # retrying if it fails.
         for _ in range(5):
-            # We want to click on an item in the class "SvgParticipantsDefault" to
-            # open the participants list. However, that element is not clickable,
-            # and instead throws an exception that the click would be intercepted
-            # by its parent element, a div in the class
+            # We want to click on an item in the class "SvgParticipantsDefault"
+            # to open the participants list. However, that element is not
+            # clickable, and instead throws an exception that the click would
+            # be intercepted by its parent element, a div in the class
             # "footer-button-base__img-layer". So, instead let's look for all of
             # those divs, and then find the one that contains the participants
             # image.
@@ -65,7 +66,7 @@ class ZoomMonitor():
                     break # We found it! Skip the rest of the footer buttons.
                 except ElementClickInterceptedException:
                     print("trying to connect failed")
-                    time.sleep(1) # The DOM isn't all set up yet; wait a little longer
+                    time.sleep(1) # The DOM isn't set up; wait a little longer
         else: # We never broke out of the for loop
             raise ElementClickInterceptedException("failed after 5 attempts")
 
