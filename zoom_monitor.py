@@ -42,8 +42,10 @@ class ZoomMonitor():
         self.driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
 
         self.wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
-        clicked = False
-        for i in range(5):
+        # There's something else we're supposed to wait for, but we can't
+        # figure out what. So, instead let's just try this, and sleep before
+        # retrying if it fails.
+        for _ in range(5):
             try:
                 # We want to click on an item in the class "SvgParticipantsDefault" to
                 # open the participants list. However, that element is not clickable,
@@ -60,16 +62,14 @@ class ZoomMonitor():
                         continue # wrong footer element, try the next one
 
                     outer.click()
-                    clicked = True
                     break # We found it! Skip the rest of the footer buttons.
             except ElementClickInterceptedException:
                 print("trying to connect failed")
                 time.sleep(1) # The DOM isn't all set up yet; wait a little longer
                 continue
-
-        if clicked is False:
+        else: # We never broke out of the for loop
             raise ElementClickInterceptedException("failed after 5 attempts")
-        
+
         # Now that we've clicked the participants list, wait until it shows up.
         self.wait_for_element(By.CLASS_NAME, "participants-wrapper__inner")
 
