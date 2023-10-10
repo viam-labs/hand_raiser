@@ -46,27 +46,26 @@ class ZoomMonitor():
         # figure out what. So, instead let's just try this, and sleep before
         # retrying if it fails.
         for _ in range(5):
-            try:
-                # We want to click on an item in the class "SvgParticipantsDefault" to
-                # open the participants list. However, that element is not clickable,
-                # and instead throws an exception that the click would be intercepted
-                # by its parent element, a div in the class
-                # "footer-button-base__img-layer". So, instead let's look for all of
-                # those divs, and then find the one that contains the participants
-                # image.
-                for outer in self.driver.find_elements(
-                        By.CLASS_NAME, "footer-button-base__img-layer"):
-                    try:
-                        outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
-                    except NoSuchElementException:
-                        continue # wrong footer element, try the next one
+            # We want to click on an item in the class "SvgParticipantsDefault" to
+            # open the participants list. However, that element is not clickable,
+            # and instead throws an exception that the click would be intercepted
+            # by its parent element, a div in the class
+            # "footer-button-base__img-layer". So, instead let's look for all of
+            # those divs, and then find the one that contains the participants
+            # image.
+            for outer in self.driver.find_elements(
+                    By.CLASS_NAME, "footer-button-base__img-layer"):
+                try:
+                    outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
+                except NoSuchElementException:
+                    continue # wrong footer element, try the next one
 
+                try:
                     outer.click()
                     break # We found it! Skip the rest of the footer buttons.
-            except ElementClickInterceptedException:
-                print("trying to connect failed")
-                time.sleep(1) # The DOM isn't all set up yet; wait a little longer
-                continue
+                except ElementClickInterceptedException:
+                    print("trying to connect failed")
+                    time.sleep(1) # The DOM isn't all set up yet; wait a little longer
         else: # We never broke out of the for loop
             raise ElementClickInterceptedException("failed after 5 attempts")
 
