@@ -2,7 +2,7 @@ from contextlib import contextmanager
 import time
 import urllib.parse
 
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import ElementClickInterceptedException, NoSuchElementException
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -42,24 +42,34 @@ class ZoomMonitor():
         self.driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
 
         self.wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
-        time.sleep(1) # The DOM isn't all set up yet; wait a little longer
-
-        # We want to click on an item in the class "SvgParticipantsDefault" to
-        # open the participants list. However, that element is not clickable,
-        # and instead throws an exception that the click would be intercepted
-        # by its parent element, a div in the class
-        # "footer-button-base__img-layer". So, instead let's look for all of
-        # those divs, and then find the one that contains the participants
-        # image.
-        for outer in self.driver.find_elements(
-                By.CLASS_NAME, "footer-button-base__img-layer"):
+        clicked = False
+        for i in range(5):
             try:
-                outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
-            except NoSuchElementException:
-                continue # wrong footer element, try the next one
-            outer.click()
-            break # We found it! Skip the rest of the footer buttons.
+                # We want to click on an item in the class "SvgParticipantsDefault" to
+                # open the participants list. However, that element is not clickable,
+                # and instead throws an exception that the click would be intercepted
+                # by its parent element, a div in the class
+                # "footer-button-base__img-layer". So, instead let's look for all of
+                # those divs, and then find the one that contains the participants
+                # image.
+                for outer in self.driver.find_elements(
+                        By.CLASS_NAME, "footer-button-base__img-layer"):
+                    try:
+                        outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
+                    except NoSuchElementException:
+                        continue # wrong footer element, try the next one
 
+                    outer.click()
+                    clicked = True
+                    break # We found it! Skip the rest of the footer buttons.
+            except ElementClickInterceptedException:
+                print("trying to connect failed")
+                time.sleep(1) # The DOM isn't all set up yet; wait a little longer
+                continue
+
+        if clicked is False:
+            raise ElementClickInterceptedException("failed after 5 attempts")
+        
         # Now that we've clicked the participants list, wait until it shows up.
         self.wait_for_element(By.CLASS_NAME, "participants-wrapper__inner")
 
