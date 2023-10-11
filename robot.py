@@ -66,29 +66,6 @@ class Robot:
         if self._wiggler is not None:
             await self.lower_hand()
 
-    async def _wiggle_on_inactivity(self):
-        """
-        This is a background coroutine that wiggles the hand every
-        INACTIVITY_PERIOD_S seconds. It is started when the hand is raised,
-        and canceled when the hand is lowered.
-        """
-        try:
-            while True:
-                await asyncio.sleep(self.INACTIVITY_PERIOD_S)
-                self._logger.debug("wiggle wiggle wiggle")
-                for _ in range(3):
-                    await self._servo.move(self.UPPER_POSITION +
-                                           self.WIGGLE_AMOUNT)
-                    await asyncio.sleep(self.WIGGLE_DELAY_S)
-                    await self._servo.move(self.UPPER_POSITION -
-                                           self.WIGGLE_AMOUNT)
-                    await asyncio.sleep(self.WIGGLE_DELAY_S)
-                # Now that we're done wiggle for now, put the arm back up.
-                self._logger.debug("stop wiggling")
-                await self._servo.move(self.UPPER_POSITION)
-        except asyncio.CancelledError:
-            return
-
     async def raise_hand(self):
         """
         Call this to move the servo to the raised position and start the task
@@ -114,3 +91,26 @@ class Robot:
         self._wiggler = None
         self._logger.debug("lower hand")
         await self._servo.move(self.LOWER_POSITION)
+
+    async def _wiggle_on_inactivity(self):
+        """
+        This is a background coroutine that wiggles the hand every
+        INACTIVITY_PERIOD_S seconds. It is started when the hand is raised,
+        and canceled when the hand is lowered.
+        """
+        try:
+            while True:
+                await asyncio.sleep(self.INACTIVITY_PERIOD_S)
+                self._logger.debug("wiggle wiggle wiggle")
+                for _ in range(3):
+                    await self._servo.move(self.UPPER_POSITION +
+                                           self.WIGGLE_AMOUNT)
+                    await asyncio.sleep(self.WIGGLE_DELAY_S)
+                    await self._servo.move(self.UPPER_POSITION -
+                                           self.WIGGLE_AMOUNT)
+                    await asyncio.sleep(self.WIGGLE_DELAY_S)
+                # Now that we're done wiggle for now, put the arm back up.
+                self._logger.debug("stop wiggling")
+                await self._servo.move(self.UPPER_POSITION)
+        except asyncio.CancelledError:
+            return
