@@ -72,16 +72,17 @@ class ZoomMonitor():
 
                 try:
                     outer.click()
-                    # TODO: this is wrong: it only breaks out of the inner loop
-                    break # We found it! Skip the rest of the footer buttons.
+                    # Now that we've clicked the participants list without
+                    # raising an exception, wait until it shows up.
+                    self._wait_for_element(
+                        By.CLASS_NAME, "participants-wrapper__inner")
+                    return # Success!
                 except ElementClickInterceptedException:
                     print("trying to connect failed")
                     time.sleep(1) # The DOM isn't set up; wait a little longer
-        else: # We never broke out of the for loop
-            raise ElementClickInterceptedException("failed after 5 attempts")
-
-        # Now that we've clicked the participants list, wait until it shows up.
-        self._wait_for_element(By.CLASS_NAME, "participants-wrapper__inner")
+                    break # Go to the next overall attempt
+        # If we get here, none of our attempts opened the participants list.
+        raise ElementClickInterceptedException("failed after 5 attempts")
 
     def clean_up(self):
         self._driver.quit()
