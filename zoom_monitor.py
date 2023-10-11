@@ -66,6 +66,7 @@ class ZoomMonitor():
             for outer in self._driver.find_elements(
                     By.CLASS_NAME, "footer-button-base__img-layer"):
                 try:
+                    # Check if this footer button contains the participants
                     outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
                 except NoSuchElementException:
                     continue # wrong footer element, try the next one
