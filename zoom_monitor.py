@@ -20,6 +20,11 @@ def monitor_zoom(url, log_level):
 
 
 class ZoomMonitor():
+    """
+    Given a URL to a Zoom meeting, join the meeting using Selenium controlling
+    a Chrome browser. We provide a way to count how many meeting participants
+    currently have their hands raised.
+    """
     def __init__(self, url, log_level):
         self._logger = getLogger(__name__)
         setLevel(log_level)
@@ -35,6 +40,12 @@ class ZoomMonitor():
 
     @staticmethod
     def _get_raw_url(url):
+        """
+        Remove any Google redirection to the Zoom meeting, and then return a
+        URL that should skip Zoom prompting you to open the link in their app
+        (so you definitely join the meeting inside the browser that Selenium
+        has opened).
+        """
         # Google Calendar wraps its links in a redirect. Check for that first
         # and remove it if relevant. The "real" URL is stored in the `q`
         # parameter in the CGI arguments.
@@ -43,14 +54,20 @@ class ZoomMonitor():
             cgi_params = urllib.parse.parse_qs(parsed_url.query)
             url = cgi_params["q"][0]
 
-        # The links that we receive from Zoom prompt you to open the Zoom app
-        # if it's available. Replace the domain name and first couple
+        # Many links that we receive from Zoom will prompt you to open the
+        # Zoom app if it's available. Replace the domain name and first couple
         # directories in the path to skip that.
         return f"https://app.zoom.us/wc/join/{url.split('/')[-1]}"
 
     def _join_meeting(self):
+<<<<<<< HEAD
         self._logger.debug("logging in...")
         # Set our name and join the meeting
+=======
+        """
+        Set our name and join the meeting. This function returns nothing.
+        """
+>>>>>>> 7efac01 (add docstrings to the ZoomMonitor class)
         self._wait_for_element(By.ID, "input-for-name")
         self._driver.find_element(By.ID, "input-for-name").send_keys(
             "Hand Raiser Bot")
@@ -58,6 +75,10 @@ class ZoomMonitor():
         self._logger.info("logged into Zoom successfully")
 
     def _open_participants_list(self):
+        """
+        Wait until we can open the participants list, then open it, then wait
+        until it's opened. This function returns nothing.
+        """
         self._wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
         # There's something else we're supposed to wait for, but we can't
         # figure out what. So, instead let's just try to continue, and retry a
@@ -100,13 +121,25 @@ class ZoomMonitor():
             f"Could not open participants list after {attempt + 1} attempts")
 
     def _wait_for_element(self, approach, value):  # Helper function
+        """
+        Wait until there is at least one element identified by the value within
+        the approach. If 5 seconds elapse without such an element appearing,
+        we raise an exception.
+        """
         WebDriverWait(self._driver, 5).until(lambda _:
             len(self._driver.find_elements(approach, value)) != 0)
 
     def clean_up(self):
+        """
+        Shut down the web server.
+        """
+        # TODO: Might be polite to leave the Zoom meeting first.
         self._driver.quit()
 
     def count_hands(self):
+        """
+        Return the number of people in the participants list with raised hands
+        """
         # We want to find an SVG element whose class is
         # "lazy-svg-icon__icon lazy-icon-nvf/270b". However,
         # `find_elements(By.CLASS_NAME, ...)` has problems when the class name
