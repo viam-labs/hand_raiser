@@ -44,8 +44,8 @@ class ZoomMonitor():
 
         self.wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
         # There's something else we're supposed to wait for, but we can't
-        # figure out what. So, instead let's just try this, and sleep before
-        # retrying if it fails.
+        # figure out what. So, instead let's just try to continue, and sleep
+        # before retrying if it fails.
         for _ in range(5):
             # We want to click on an item in the class "SvgParticipantsDefault"
             # to open the participants list. However, that element is not
