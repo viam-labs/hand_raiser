@@ -22,6 +22,14 @@ class ZoomMonitor():
     def __init__(self, url):
         self.driver = Chrome()
 
+        updated_url = self._get_updated_url(url)
+        self.driver.get(updated_url)
+
+        self._sign_in()
+        self._open_participants_list()
+
+    @staticmethod
+    def _get_updated_url(url):
         # Google Calendar wraps its links in a redirect. Check for that first
         # and remove it if relevant. The "real" URL is stored in the `q`
         # parameter in the CGI arguments.
@@ -33,15 +41,16 @@ class ZoomMonitor():
         # The links that we receive from Zoom prompt you to open the Zoom app
         # if it's available. Replace the domain name and first couple
         # directories in the path to skip that.
-        updated_url = f"https://app.zoom.us/wc/join/{url.split('/')[-1]}"
-        self.driver.get(updated_url)
+        return f"https://app.zoom.us/wc/join/{url.split('/')[-1]}"
 
+    def _sign_in(self):
         # Set our name and join the meeting
         self.wait_for_element(By.ID, "input-for-name")
         name_field = self.driver.find_element(By.ID, "input-for-name")
         name_field.send_keys("Hand Raiser Bot")
         self.driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
 
+    def _open_participants_list(self):
         self.wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
         # There's something else we're supposed to wait for, but we can't
         # figure out what. So, instead let's just try to continue, and sleep
@@ -63,6 +72,7 @@ class ZoomMonitor():
 
                 try:
                     outer.click()
+                    # TODO: this is wrong: it only breaks out of the inner loop
                     break # We found it! Skip the rest of the footer buttons.
                 except ElementClickInterceptedException:
                     print("trying to connect failed")
