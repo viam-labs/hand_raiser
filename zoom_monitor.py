@@ -60,7 +60,9 @@ class ZoomMonitor():
             # to open the participants list. However, that element is not
             # clickable, and instead throws an exception that the click would
             # be intercepted by its parent element, a div in the class
-            # "footer-button-base__img-layer". So, instead let's look for all of
+            # "footer-button-base__img-layer". So, we'd like to find that
+            # element and then click on its parent element. but it's not obvious
+            # how to do that in Selenium. So, instead let's look for all of
             # those divs, and then find the one that contains the participants
             # image.
             for outer in self._driver.find_elements(
@@ -79,7 +81,6 @@ class ZoomMonitor():
                         By.CLASS_NAME, "participants-wrapper__inner")
                     return # Success!
                 except ElementClickInterceptedException:
-                    print("trying to connect failed")
                     time.sleep(1) # The DOM isn't set up; wait a little longer
                     break # Go to the next overall attempt
         # If we get here, none of our attempts opened the participants list.
