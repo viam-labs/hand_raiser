@@ -20,10 +20,10 @@ def monitor_zoom(url):
 
 class ZoomMonitor():
     def __init__(self, url):
-        self.driver = Chrome()
+        self._driver = Chrome()
 
         updated_url = self._get_updated_url(url)
-        self.driver.get(updated_url)
+        self._driver.get(updated_url)
 
         self._sign_in()
         self._open_participants_list()
@@ -45,13 +45,13 @@ class ZoomMonitor():
 
     def _sign_in(self):
         # Set our name and join the meeting
-        self.wait_for_element(By.ID, "input-for-name")
-        name_field = self.driver.find_element(By.ID, "input-for-name")
+        self._wait_for_element(By.ID, "input-for-name")
+        name_field = self._driver.find_element(By.ID, "input-for-name")
         name_field.send_keys("Hand Raiser Bot")
-        self.driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
+        self._driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
 
     def _open_participants_list(self):
-        self.wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
+        self._wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
         # There's something else we're supposed to wait for, but we can't
         # figure out what. So, instead let's just try to continue, and sleep
         # before retrying if it fails.
@@ -63,7 +63,7 @@ class ZoomMonitor():
             # "footer-button-base__img-layer". So, instead let's look for all of
             # those divs, and then find the one that contains the participants
             # image.
-            for outer in self.driver.find_elements(
+            for outer in self._driver.find_elements(
                     By.CLASS_NAME, "footer-button-base__img-layer"):
                 try:
                     outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
@@ -81,14 +81,14 @@ class ZoomMonitor():
             raise ElementClickInterceptedException("failed after 5 attempts")
 
         # Now that we've clicked the participants list, wait until it shows up.
-        self.wait_for_element(By.CLASS_NAME, "participants-wrapper__inner")
+        self._wait_for_element(By.CLASS_NAME, "participants-wrapper__inner")
 
     def clean_up(self):
-        self.driver.quit()
+        self._driver.quit()
 
-    def wait_for_element(self, approach, value):  # Helper function
-        WebDriverWait(self.driver, 5).until(lambda _:
-            len(self.driver.find_elements(approach, value)) != 0)
+    def _wait_for_element(self, approach, value):  # Helper function
+        WebDriverWait(self._driver, 5).until(lambda _:
+            len(self._driver.find_elements(approach, value)) != 0)
 
     def count_hands(self):
         # We want to find an SVG element whose class is
@@ -99,6 +99,6 @@ class ZoomMonitor():
         # raised" emoji). Elements whose class contains "270b" show up in
         # several places, however, so we restrict it to only the ones that are
         # within the participants list.
-        return len(self.driver.find_elements(
+        return len(self._driver.find_elements(
             By.XPATH, "//*[@class='participants-wrapper__inner']"
                       "//*[contains(@class, '270b')]"))
