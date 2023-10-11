@@ -46,8 +46,8 @@ class ZoomMonitor():
     def _sign_in(self):
         # Set our name and join the meeting
         self._wait_for_element(By.ID, "input-for-name")
-        name_field = self._driver.find_element(By.ID, "input-for-name")
-        name_field.send_keys("Hand Raiser Bot")
+        self._driver.find_element(By.ID, "input-for-name").send_keys(
+            "Hand Raiser Bot")
         self._driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
 
     def _open_participants_list(self):
