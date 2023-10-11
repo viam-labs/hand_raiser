@@ -26,15 +26,15 @@ class ZoomMonitor():
 
         self._driver = Chrome()
 
-        updated_url = self._get_updated_url(url)
-        self._logger.debug(f"updated URL {url} to {updated_url}")
-        self._driver.get(updated_url)
+        raw_url = self._get_raw_url(url)
+        self._logger.debug(f"updated URL {url} to {raw_url}")
+        self._driver.get(raw_url)
 
         self._join_meeting()
         self._open_participants_list()
 
     @staticmethod
-    def _get_updated_url(url):
+    def _get_raw_url(url):
         # Google Calendar wraps its links in a redirect. Check for that first
         # and remove it if relevant. The "real" URL is stored in the `q`
         # parameter in the CGI arguments.
