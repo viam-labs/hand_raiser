@@ -55,7 +55,7 @@ class ZoomMonitor():
         # There's something else we're supposed to wait for, but we can't
         # figure out what. So, instead let's just try to continue, and sleep
         # before retrying if it fails.
-        for _ in range(5):
+        for attempt in range(5):
             # We want to click on an item in the class "SvgParticipantsDefault"
             # to open the participants list. However, that element is not
             # clickable, and instead throws an exception that the click would
@@ -82,7 +82,8 @@ class ZoomMonitor():
                     time.sleep(1) # The DOM isn't set up; wait a little longer
                     break # Go to the next overall attempt
         # If we get here, none of our attempts opened the participants list.
-        raise ElementClickInterceptedException("failed after 5 attempts")
+        raise ElementClickInterceptedException(
+            f"Could not open participants list after {attempt + 1} attempts")
 
     def _wait_for_element(self, approach, value):  # Helper function
         WebDriverWait(self._driver, 5).until(lambda _:
