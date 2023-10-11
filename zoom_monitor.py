@@ -88,11 +88,11 @@ class ZoomMonitor():
             # to open the participants list. However, that element is not
             # clickable, and instead throws an exception that the click would
             # be intercepted by its parent element, a div in the class
-            # "footer-button-base__img-layer". So, we'd like to find that
-            # element and then click on its parent element. but it's not obvious
-            # how to do that in Selenium. So, instead let's look for all of
-            # those divs, and then find the one that contains the participants
-            # image.
+            # "footer-button-base__img-layer". So, we'd like to find that SVG
+            # element and then click on its parent. but it's not obvious how to
+            # do that in Selenium. So, instead let's look for all of those
+            # footer divs, and then click on the one that contains the
+            # participants image.
             for outer in self._driver.find_elements(
                     By.CLASS_NAME, "footer-button-base__img-layer"):
                 try:
