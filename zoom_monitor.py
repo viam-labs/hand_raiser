@@ -30,7 +30,7 @@ class ZoomMonitor():
         self._logger.debug(f"updated URL {url} to {updated_url}")
         self._driver.get(updated_url)
 
-        self._sign_in()
+        self._join_meeting()
         self._open_participants_list()
 
     @staticmethod
@@ -48,7 +48,7 @@ class ZoomMonitor():
         # directories in the path to skip that.
         return f"https://app.zoom.us/wc/join/{url.split('/')[-1]}"
 
-    def _sign_in(self):
+    def _join_meeting(self):
         self._logger.debug("logging in...")
         # Set our name and join the meeting
         self._wait_for_element(By.ID, "input-for-name")
