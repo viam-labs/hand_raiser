@@ -84,12 +84,12 @@ class ZoomMonitor():
         # If we get here, none of our attempts opened the participants list.
         raise ElementClickInterceptedException("failed after 5 attempts")
 
-    def clean_up(self):
-        self._driver.quit()
-
     def _wait_for_element(self, approach, value):  # Helper function
         WebDriverWait(self._driver, 5).until(lambda _:
             len(self._driver.find_elements(approach, value)) != 0)
+
+    def clean_up(self):
+        self._driver.quit()
 
     def count_hands(self):
         # We want to find an SVG element whose class is
