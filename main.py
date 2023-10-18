@@ -12,7 +12,7 @@ SERVER_PORT = 8090
 
 
 async def main():
-    log_level = sys.argv[2] if len(sys.argv) == 3 else "INFO"
+    log_level = int(sys.argv[2]) if len(sys.argv) == 3 else 20
     with monitor_zoom(sys.argv[1], log_level) as zoom:
         async with create_robot(secrets.creds, secrets.address, log_level) as robot:
             audience = Audience(robot, log_level)

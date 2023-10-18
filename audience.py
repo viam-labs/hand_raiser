@@ -1,5 +1,5 @@
 import asyncio
-from logging import getLogger
+from viam.logging import getLogger
 
 
 class Audience:
@@ -46,7 +46,7 @@ class Audience:
         forgets to lower their hand.
         """
         async with self._mutex:
-            self._logger.info(f"set hand count {self._count} to {new_value}")
+            self._logger.debug(f"set hand count {self._count} to {new_value}")
             if self._count == 0 and new_value > 0:
                 await self._robot.raise_hand()
             if self._count > 0 and new_value == 0:

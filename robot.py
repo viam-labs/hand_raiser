@@ -1,8 +1,8 @@
 import asyncio
 from contextlib import asynccontextmanager
-from logging import getLogger
 
 from viam.components.servo import Servo
+from viam.logging import getLogger
 from viam.robot.client import RobotClient
 from viam.rpc.dial import DialOptions
 

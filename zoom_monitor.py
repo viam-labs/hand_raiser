@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-from logging import getLogger
 import time
 import urllib.parse
 
@@ -8,6 +7,7 @@ from selenium.common.exceptions import (ElementClickInterceptedException,
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
+from viam.logging import getLogger
 
 
 @contextmanager
