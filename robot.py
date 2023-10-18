@@ -34,7 +34,7 @@ class Robot:
     LOWER_POSITION = 152
     WIGGLE_AMOUNT = 7  # Move this much left and right of UPPER_POSITION
     WIGGLE_DELAY_S = 0.5
-    INACTIVITY_PERIOD_S = 60
+    INACTIVITY_PERIOD_S = 30
 
     def __init__(self, servo, log_level):
         """
