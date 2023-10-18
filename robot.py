@@ -43,8 +43,8 @@ class Robot:
 
         WARNING: this class is not thread safe!
         """
-        self.logger = getLogger(__name__)
-        self.logger.setLevel(log_level)
+        self._logger = getLogger(__name__)
+        self._logger.setLevel(log_level)
 
         self._servo = servo
 
@@ -74,7 +74,7 @@ class Robot:
         """
         try:
             while True:
-                self.logger.debug("wiggle wiggle wiggle")
+                self._logger.debug("wiggle wiggle wiggle")
                 await asyncio.sleep(self.INACTIVITY_PERIOD_S)
                 for _ in range(3):
                     await self._servo.move(self.UPPER_POSITION +
@@ -84,7 +84,7 @@ class Robot:
                                            self.WIGGLE_AMOUNT)
                     await asyncio.sleep(self.WIGGLE_DELAY_S)
                 # Now that we're done wiggle for now, put the arm back up.
-                self.logger.debug("stop wiggling")
+                self._logger.debug("stop wiggling")
                 await self._servo.move(self.UPPER_POSITION)
         except asyncio.CancelledError:
             return
@@ -95,9 +95,9 @@ class Robot:
         that wiggles the hand on inactivity.
         """
         if self._wiggler is not None:
-            self.logger.warning("LOGIC BUG: trying to raise already-raised hand")
+            self._logger.warning("LOGIC BUG: trying to raise already-raised hand")
             return
-        self.logger.info("raise hand")
+        self._logger.info("raise hand")
         await self._servo.move(self.UPPER_POSITION)
         self._wiggler = asyncio.create_task(self._wiggle_on_inactivity())
 
@@ -107,10 +107,10 @@ class Robot:
         background task that wiggles the hand once in a while.
         """
         if self._wiggler is None:
-            self.logger.warning("LOGIC BUG: trying to lower already-lowered hand")
+            self._logger.warning("LOGIC BUG: trying to lower already-lowered hand")
             return
         self._wiggler.cancel()
         await self._wiggler
         self._wiggler = None
-        self.logger.info("lower hand")
+        self._logger.info("lower hand")
         await self._servo.move(self.LOWER_POSITION)

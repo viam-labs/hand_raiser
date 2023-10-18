@@ -8,8 +8,8 @@ class Audience:
         Audience keeps track of how many people have their hands up, and raises
         and lowers the robot's hand to match. This class is thread safe.
         """
-        self.logger = getLogger(__name__)
-        self.logger.setLevel(log_level)
+        self._logger = getLogger(__name__)
+        self._logger.setLevel(log_level)
 
         self._robot = robot
         self._mutex = asyncio.Lock()
@@ -22,7 +22,7 @@ class Audience:
         robot's hand, and otherwise we take no action.
         """
         async with self._mutex:
-            self.logger.debug("one person raised their hand")
+            self._logger.debug("one person raised their hand")
             self._count += 1
             if self._count == 1:
                 await self._robot.raise_hand()
@@ -34,7 +34,7 @@ class Audience:
         lower the robot's hand, and otherwise take no action.
         """
         async with self._mutex:
-            self.logger.debug("one person lowered their hand")
+            self._logger.debug("one person lowered their hand")
             self._count -= 1
             if self._count == 0:
                 await self._robot.lower_hand()
@@ -46,7 +46,7 @@ class Audience:
         forgets to lower their hand.
         """
         async with self._mutex:
-            self.logger.info(f"set hand count {self._count} to {new_value}")
+            self._logger.info(f"set hand count {self._count} to {new_value}")
             if self._count == 0 and new_value > 0:
                 await self._robot.raise_hand()
             if self._count > 0 and new_value == 0:
