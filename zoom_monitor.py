@@ -7,11 +7,12 @@ from selenium.common.exceptions import (ElementClickInterceptedException,
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
+from viam.logging import getLogger, setLevel
 
 
 @contextmanager
-def monitor_zoom(url):
-    zoom = ZoomMonitor(url)
+def monitor_zoom(url, log_level):
+    zoom = ZoomMonitor(url, log_level)
     try:
         yield zoom
     finally:
@@ -19,10 +20,14 @@ def monitor_zoom(url):
 
 
 class ZoomMonitor():
-    def __init__(self, url):
+    def __init__(self, url, log_level):
+        self._logger = getLogger(__name__)
+        setLevel(log_level)
+
         self._driver = Chrome()
 
         updated_url = self._get_updated_url(url)
+        self._logger.debug(f"updated URL {url} to {updated_url}")
         self._driver.get(updated_url)
 
         self._sign_in()
@@ -44,11 +49,13 @@ class ZoomMonitor():
         return f"https://app.zoom.us/wc/join/{url.split('/')[-1]}"
 
     def _sign_in(self):
+        self._logger.debug("logging in...")
         # Set our name and join the meeting
         self._wait_for_element(By.ID, "input-for-name")
         self._driver.find_element(By.ID, "input-for-name").send_keys(
             "Hand Raiser Bot")
         self._driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
+        self._logger.info("logged into Zoom successfully")
 
     def _open_participants_list(self):
         self._wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
@@ -68,21 +75,26 @@ class ZoomMonitor():
             for outer in self._driver.find_elements(
                     By.CLASS_NAME, "footer-button-base__img-layer"):
                 try:
+                    self._logger.debug(f"trying to find participants in {outer}")
                     # Check if this footer button contains the participants
                     outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
                 except NoSuchElementException:
-                    continue # wrong footer element, try the next one
+                    self._logger.debug("participants not present, next...")
+                    continue  # wrong footer element, try the next one
 
                 try:
                     outer.click()
+                    self._logger.debug("participants list found")
                     # Now that we've clicked the participants list without
                     # raising an exception, wait until it shows up.
                     self._wait_for_element(
                         By.CLASS_NAME, "participants-wrapper__inner")
-                    return # Success!
+                    self._logger.info("participants list clicked!")
+                    return  # Success!
                 except ElementClickInterceptedException:
-                    time.sleep(1) # The DOM isn't set up; wait a little longer
-                    break # Go to the next overall attempt
+                    self._logger.debug("DOM isn't set up; wait and try again")
+                    time.sleep(1)  # The DOM isn't set up; wait a little longer
+                    break  # Go to the next overall attempt
         # If we get here, none of our attempts opened the participants list.
         raise ElementClickInterceptedException(
             f"Could not open participants list after {attempt + 1} attempts")
