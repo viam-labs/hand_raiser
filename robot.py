@@ -2,7 +2,7 @@ import asyncio
 from contextlib import asynccontextmanager
 
 from viam.components.servo import Servo
-from viam.logging import getLogger
+from viam.logging import getLogger, setLevel
 from viam.robot.client import RobotClient
 from viam.rpc.dial import DialOptions
 
@@ -44,7 +44,7 @@ class Robot:
         WARNING: this class is not thread safe!
         """
         self._logger = getLogger(__name__)
-        self._logger.setLevel(log_level)
+        setLevel(log_level)
 
         self._servo = servo
 

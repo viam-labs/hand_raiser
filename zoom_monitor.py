@@ -7,7 +7,7 @@ from selenium.common.exceptions import (ElementClickInterceptedException,
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-from viam.logging import getLogger
+from viam.logging import getLogger, setLevel
 
 
 @contextmanager
@@ -22,7 +22,7 @@ def monitor_zoom(url, log_level):
 class ZoomMonitor():
     def __init__(self, url, log_level):
         self._logger = getLogger(__name__)
-        self._logger.setLevel(log_level)
+        setLevel(log_level)
 
         self._driver = Chrome()
 

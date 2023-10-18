@@ -1,5 +1,5 @@
 import asyncio
-from viam.logging import getLogger
+from viam.logging import getLogger, setLevel
 
 
 class Audience:
@@ -9,7 +9,7 @@ class Audience:
         and lowers the robot's hand to match. This class is thread safe.
         """
         self._logger = getLogger(__name__)
-        self._logger.setLevel(log_level)
+        setLevel(log_level)
 
         self._robot = robot
         self._mutex = asyncio.Lock()
