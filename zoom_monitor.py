@@ -60,14 +60,10 @@ class ZoomMonitor():
         return f"https://app.zoom.us/wc/join/{url.split('/')[-1]}"
 
     def _join_meeting(self):
-<<<<<<< HEAD
-        self._logger.debug("logging in...")
-        # Set our name and join the meeting
-=======
         """
         Set our name and join the meeting. This function returns nothing.
         """
->>>>>>> 7efac01 (add docstrings to the ZoomMonitor class)
+        self._logger.debug("logging in...")
         self._wait_for_element(By.ID, "input-for-name")
         self._driver.find_element(By.ID, "input-for-name").send_keys(
             "Hand Raiser Bot")
