@@ -46,6 +46,12 @@ class ZoomMonitor():
         (so you definitely join the meeting inside the browser that Selenium
         has opened).
         """
+        # On certain unusual shells, when you paste a URL, it automatically escapes the question
+        # mark symbol so the shell doesn't try to pattern-match on files in the file system. If you
+        # put the URL in quotes and still get those escapes, Zoom won't be able to find the
+        # passcode in the URL. So, in here, we first must remove all backslashes.
+        url = url.replace("\\", "")
+
         # Google Calendar wraps its links in a redirect. Check for that first
         # and remove it if relevant. The "real" URL is stored in the `q`
         # parameter in the CGI arguments.
