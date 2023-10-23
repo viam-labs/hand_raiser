@@ -11,7 +11,7 @@ When we have large meetings, sometimes the remote employees are unable to partic
 
 ## Running
 1. When you want Hand Raiser Bot to join a meeting, run `./main.py '<url-of-zoom-meeting>'` to start it. The URL likely contains a question mark, so we recommend enclosing the entire URL in single quotes so your terminal doesn't try pattern-matching on it.
-2. This will open a Chrome window and join the Zoom meeting as the user "Hand Raiser Bot".
+2. This will open a Chrome window and join the Zoom meeting as the user "Hand Raiser Bot."
 3. Whenever someone in the Zoom meeting selects the "Raise Hand" reaction, we'll move the servo on the robot. It will be raised whenever _at least 1_ person in the Zoom meeting has their hand raised, and lowered again when no one has their hand raised.
 4. If Hand Raiser Bot's servo has been raised for at least 30 seconds, we will wiggle it side to side, to try to call attention to ourselves.
 5. When the meeting is over (or when you want Hand Raiser Bot to leave), hit control-C in the terminal to shut everything down. This will also lower the servo even if someone in the Zoom meeting still has their hand raised.
