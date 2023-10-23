@@ -15,7 +15,7 @@ When we have large meetings, sometimes the remote employees are unable to partic
 3. Whenever someone in the Zoom meeting selects the "Raise Hand" reaction, the servo on the robot moves. The hand will be raised whenever _at least 1_ person in the Zoom meeting has their hand raised, and lowered again when no one has their hand raised.
 4. If the hand has been raised for at least 30 seconds, it will begin to wiggle side-to-side at intervals to try to gain attention.
 5. Once a Zoom participant has been called upon, they should lower their hand in the Zoom interface! This will lower the robot hand, unless other meeting participants also have raised hands in Zoom.
-5. When the meeting is over (or when you want Hand Raiser Bot to leave), hit control-C in the terminal to shut everything down. This will also lower the servo even if someone in the Zoom meeting still has their hand raised.
+6. When the meeting is over (or when you want Hand Raiser Bot to leave), hit control-C in the terminal to shut everything down. This will also lower the servo even if someone in the Zoom meeting still has their hand raised.
 
 ## Code Layout
 - `robot.py` is how to talk to Viam to move the hardware itself. This can raise and lower the servo, and wiggle it if it has been raised for long enough.
