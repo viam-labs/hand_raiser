@@ -32,7 +32,7 @@ class ZoomMonitor():
         self._driver = Chrome()
 
         raw_url = self._get_raw_url(url)
-        self._logger.debug(f"updated URL {url} to {raw_url}")
+        self._logger.debug(f"parsed URL {url} to {raw_url}")
         self._driver.get(raw_url)
 
         self._join_meeting()
@@ -93,7 +93,7 @@ class ZoomMonitor():
             # clickable, and instead throws an exception that the click would
             # be intercepted by its parent element, a div in the class
             # "footer-button-base__img-layer". So, we'd like to find that SVG
-            # element and then click on its parent. but it's not obvious how to
+            # element and then click on its parent. But it's not obvious how to
             # do that in Selenium. So, instead let's look for all of those
             # footer divs, and then click on the one that contains the
             # participants image.
