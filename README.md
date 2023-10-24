@@ -18,7 +18,7 @@ When we have large meetings, sometimes the remote employees are unable to partic
 6. When the meeting is over (or when you want Hand Raiser Bot to leave), hit control-C in the terminal to shut everything down. This will also lower the servo even if someone in the Zoom meeting still has their hand raised.
 
 ## Code Layout
-- `robot.py` is how to talk to Viam to move the hardware itself. This can raise and lower the servo, and wiggle it if it has been raised for long enough.
+- `robot.py` talks to `viam-server` to move the hardware itself. The code in this file raises and lowers the servo, and wiggles it if it has been raised for a while.
 - `audience.py` keeps track of how many hands are raised. This tells the robot when it's time to raise and lower the hand.
 - `zoom_monitor.py` uses Selenium to open a web browser and join the Zoom meeting. It counts how many participants in the meeting have their hands raised.
   - As of summer 2023, Zoom did not have an official API for participart reactions like whether someone has raised their hand. Consequently, we're getting this data by webscraping with Selenium.
