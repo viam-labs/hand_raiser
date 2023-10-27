@@ -5,6 +5,7 @@ import urllib.parse
 from selenium.common.exceptions import (ElementClickInterceptedException,
                                         NoSuchElementException)
 from selenium.webdriver import Chrome
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from viam.logging import getLogger, setLevel
@@ -29,7 +30,12 @@ class ZoomMonitor():
         self._logger = getLogger(__name__)
         setLevel(log_level)
 
-        self._driver = Chrome()
+        chrome_options = Options()
+        # Uncomment this line to keep the browser open even after this process
+        # exits. It's a useful option when debugging or adding new features.
+        chrome_options.add_experimental_option("detach", True)
+
+        self._driver = Chrome(options=chrome_options)
 
         raw_url = self._get_raw_url(url)
         self._logger.debug(f"parsed URL {url} to {raw_url}")
@@ -81,10 +87,19 @@ class ZoomMonitor():
         """
         If we are notified that someone is recording this meeting, click
         through so we can count hands some more. This notification will come
-        either at the beginning if the recording was already in progress, or
-        in the middle of the meeting if someone starts recording.
+        either at the beginning if we joined when the recording was already
+        in progress, or in the middle of the meeting if someone starts
+        recording.
         """
-        pass
+        try:
+            outer = self._driver.find_element(
+                By.CLASS_NAME, "recording-disclaimer-dialog")
+        except NoSuchElementException:
+            return  # No one has started recording a video recently!
+
+        # Click "Got it" to acknowledge that the meeting is being recorded.
+        # This should allow us to open the participants list again.
+        outer.find_element(By.CLASS_NAME, "zm-btn--primary").click()
 
     def _open_participants_list(self):
         """
