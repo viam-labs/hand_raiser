@@ -141,17 +141,19 @@ class ZoomMonitor():
 
                 try:
                     outer.click()
-                    self._logger.debug("participants list found")
-                    # Now that we've clicked the participants list without
-                    # raising an exception, wait until it shows up.
-                    self._wait_for_element(
-                        By.CLASS_NAME, "participants-wrapper__inner")
-                    self._logger.info("participants list clicked!")
-                    return  # Success!
                 except ElementClickInterceptedException:
                     self._logger.debug("DOM isn't set up; wait and try again")
                     time.sleep(1)  # The DOM isn't set up; wait a little longer
                     break  # Go to the next overall attempt
+
+                self._logger.debug("participants list clicked")
+                # Now that we've clicked the participants list without raising
+                # an exception, wait until it shows up.
+                self._wait_for_element(
+                    By.CLASS_NAME, "participants-wrapper__inner")
+                self._logger.info("participants list opened")
+                return  # Success!
+
         # If we get here, none of our attempts opened the participants list.
         raise ElementClickInterceptedException(
             f"Could not open participants list after {attempt + 1} attempts")
