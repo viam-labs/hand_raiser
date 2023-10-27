@@ -77,6 +77,15 @@ class ZoomMonitor():
         self._driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
         self._logger.info("logged into Zoom successfully")
 
+    def _acknowledge_recording(self):
+        """
+        If we are notified that someone is recording this meeting, click
+        through so we can count hands some more. This notification will come
+        either at the beginning if the recording was already in progress, or
+        in the middle of the meeting if someone starts recording.
+        """
+        pass
+
     def _open_participants_list(self):
         """
         Wait until we can open the participants list, then open it, then wait
@@ -162,6 +171,10 @@ class ZoomMonitor():
         """
         Return the number of people in the participants list with raised hands
         """
+        # If someone starts recording the meeting, we'll get a pop-up modal
+        # warning us about that before we can count hands again.
+        self._acknowledge_recording()
+
         # If someone else shares their screen, it closes the participants list.
         # So, try reopening it every time we want to count hands.
         self._open_participants_list()
