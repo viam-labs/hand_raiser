@@ -36,7 +36,6 @@ class ZoomMonitor():
         self._driver.get(raw_url)
 
         self._join_meeting()
-        self._open_participants_list()
 
     @staticmethod
     def _get_raw_url(url):
@@ -83,10 +82,19 @@ class ZoomMonitor():
         Wait until we can open the participants list, then open it, then wait
         until it's opened. This function returns nothing.
         """
+        # First, check if it's already opened, and if so return immediately.
+        try:
+            self._driver.find_element(
+                    By.CLASS_NAME, "participants-wrapper__inner")
+            return  # Already opened!
+        except NoSuchElementException:
+            pass  # We need to open it.
+
         self._wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
-        # There's something else we're supposed to wait for, but we can't
-        # figure out what. So, instead let's just try to continue, and retry a
-        # few times if it fails.
+        # Right when we join Zoom, the participants button will exist but
+        # won't yet be clickable. There's something else we're supposed to wait
+        # for, but we can't figure out what. So, instead let's just try to
+        # continue, and retry a few times if it fails.
         for attempt in range(5):
             # We want to click on an item in the class "SvgParticipantsDefault"
             # to open the participants list. However, that element is not
@@ -154,6 +162,10 @@ class ZoomMonitor():
         """
         Return the number of people in the participants list with raised hands
         """
+        # If someone else shares their screen, it closes the participants list.
+        # So, try reopening it every time we want to count hands.
+        self._open_participants_list()
+
         # We want to find an SVG element whose class is
         # "lazy-svg-icon__icon lazy-icon-nvf/270b". However,
         # `find_elements(By.CLASS_NAME, ...)` has problems when the class name
