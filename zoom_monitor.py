@@ -33,7 +33,7 @@ class ZoomMonitor():
         chrome_options = Options()
         # Uncomment this line to keep the browser open even after this process
         # exits. It's a useful option when debugging or adding new features.
-        chrome_options.add_experimental_option("detach", True)
+        #chrome_options.add_experimental_option("detach", True)
 
         self._driver = Chrome(options=chrome_options)
 
