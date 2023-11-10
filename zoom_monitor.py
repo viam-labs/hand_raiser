@@ -40,7 +40,7 @@ class ZoomMonitor():
         # Normally, if you hit control-C, Selenium shuts down the web browser
         # immediately. However, we want to leave the meeting before
         # disconnecting. So, we need to make the subprocess running the web
-        # browser be in a separate process group than ourselves, so it doesn't
+        # browser be in a separate process group from ourselves, so it doesn't
         # receive the signal.
         # Solution taken from https://stackoverflow.com/a/62430234
         subprocess_Popen = subprocess.Popen
