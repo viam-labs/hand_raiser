@@ -1,6 +1,5 @@
 from contextlib import contextmanager
 import functools
-import signal
 import subprocess
 import time
 import urllib.parse
@@ -43,7 +42,6 @@ class ZoomMonitor():
         # disconnecting. So, we need to make the subprocess running the web
         # browser be in a separate process group than ourselves, so it doesn't
         # receive the signal.
-
         # Solution taken from https://stackoverflow.com/a/62430234
         subprocess_Popen = subprocess.Popen
         subprocess.Popen = functools.partial(subprocess_Popen, process_group=0)
