@@ -5,6 +5,7 @@ import urllib.parse
 from selenium.common.exceptions import (ElementClickInterceptedException,
                                         NoSuchElementException)
 from selenium.webdriver import Chrome
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from viam.logging import getLogger, setLevel
@@ -29,14 +30,18 @@ class ZoomMonitor():
         self._logger = getLogger(__name__)
         setLevel(log_level)
 
-        self._driver = Chrome()
+        chrome_options = Options()
+        # Uncomment this line to keep the browser open even after this process
+        # exits. It's a useful option when debugging or adding new features.
+        #chrome_options.add_experimental_option("detach", True)
+
+        self._driver = Chrome(options=chrome_options)
 
         raw_url = self._get_raw_url(url)
         self._logger.debug(f"parsed URL {url} to {raw_url}")
         self._driver.get(raw_url)
 
         self._join_meeting()
-        self._open_participants_list()
 
     @staticmethod
     def _get_raw_url(url):
@@ -78,15 +83,42 @@ class ZoomMonitor():
         self._driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
         self._logger.info("logged into Zoom successfully")
 
+    def _acknowledge_recording(self):
+        """
+        If we are notified that someone is recording this meeting, click
+        through so we can count hands some more. This notification will come
+        either at the beginning if we joined when the recording was already
+        in progress, or in the middle of the meeting if someone starts
+        recording.
+        """
+        try:
+            outer = self._driver.find_element(
+                By.CLASS_NAME, "recording-disclaimer-dialog")
+        except NoSuchElementException:
+            return  # No one has started recording a video recently!
+
+        # Click "Got it" to acknowledge that the meeting is being recorded.
+        # This should allow us to open the participants list again.
+        outer.find_element(By.CLASS_NAME, "zm-btn--primary").click()
+
     def _open_participants_list(self):
         """
         Wait until we can open the participants list, then open it, then wait
         until it's opened. This function returns nothing.
         """
+        # First, check if it's already opened, and if so return immediately.
+        try:
+            self._driver.find_element(
+                    By.CLASS_NAME, "participants-wrapper__inner")
+            return  # Already opened!
+        except NoSuchElementException:
+            pass  # We need to open it.
+
         self._wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
-        # There's something else we're supposed to wait for, but we can't
-        # figure out what. So, instead let's just try to continue, and retry a
-        # few times if it fails.
+        # Right when we join Zoom, the participants button will exist but
+        # won't yet be clickable. There's something else we're supposed to wait
+        # for, but we can't figure out what. So, instead let's just try to
+        # continue, and retry a few times if it fails.
         for attempt in range(5):
             # We want to click on an item in the class "SvgParticipantsDefault"
             # to open the participants list. However, that element is not
@@ -109,17 +141,19 @@ class ZoomMonitor():
 
                 try:
                     outer.click()
-                    self._logger.debug("participants list found")
-                    # Now that we've clicked the participants list without
-                    # raising an exception, wait until it shows up.
-                    self._wait_for_element(
-                        By.CLASS_NAME, "participants-wrapper__inner")
-                    self._logger.info("participants list clicked!")
-                    return  # Success!
+                    self._logger.debug("participants list clicked")
                 except ElementClickInterceptedException:
                     self._logger.debug("DOM isn't set up; wait and try again")
                     time.sleep(1)  # The DOM isn't set up; wait a little longer
                     break  # Go to the next overall attempt
+
+                # Now that we've clicked the participants list without raising
+                # an exception, wait until it shows up.
+                self._wait_for_element(
+                    By.CLASS_NAME, "participants-wrapper__inner")
+                self._logger.info("participants list opened")
+                return  # Success!
+
         # If we get here, none of our attempts opened the participants list.
         raise ElementClickInterceptedException(
             f"Could not open participants list after {attempt + 1} attempts")
@@ -154,6 +188,19 @@ class ZoomMonitor():
         """
         Return the number of people in the participants list with raised hands
         """
+        # If someone starts recording the meeting, we'll get a pop-up modal
+        # warning us about that before we can count hands again.
+        self._acknowledge_recording()
+
+        # WARNING: there's a race condition right here. If someone starts recording the meeting
+        # here, after _acknowledge_recording returns and before _open_participants_list runs, we
+        # will time out opening the list and crash. It's such an unlikely event that we haven't
+        # bothered fixing it yet.
+
+        # If someone else shares their screen, it closes the participants list.
+        # So, try reopening it every time we want to count hands.
+        self._open_participants_list()
+
         # We want to find an SVG element whose class is
         # "lazy-svg-icon__icon lazy-icon-nvf/270b". However,
         # `find_elements(By.CLASS_NAME, ...)` has problems when the class name
