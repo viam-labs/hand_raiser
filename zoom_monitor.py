@@ -37,7 +37,7 @@ class ZoomMonitor():
         # exits. It's a useful option when debugging or adding new features.
         #chrome_options.add_experimental_option("detach", True)
 
-        # Normally, if you hit control-C, Selenium disconnects from the browser
+        # Normally, if you hit control-C, Selenium shuts down the web browser
         # immediately. However, we want to leave the meeting before
         # disconnecting. So, we need to make the subprocess running the web
         # browser be in a separate process group than ourselves, so it doesn't
