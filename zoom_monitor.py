@@ -41,7 +41,7 @@ class ZoomMonitor():
         # immediately. However, we want to leave the meeting before
         # disconnecting. So, we need to make the subprocess running the web
         # browser be in a separate process group from ourselves, so it doesn't
-        # receive the signal.
+        # receive the SIGINT from the control-C.
         # Solution inspired by https://stackoverflow.com/a/62430234
         subprocess_Popen = subprocess.Popen
         subprocess.Popen = functools.partial(subprocess_Popen, process_group=0)
