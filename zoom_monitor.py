@@ -1,4 +1,6 @@
 from contextlib import contextmanager
+import functools
+import subprocess
 import time
 import urllib.parse
 
@@ -35,7 +37,16 @@ class ZoomMonitor():
         # exits. It's a useful option when debugging or adding new features.
         #chrome_options.add_experimental_option("detach", True)
 
+        # Normally, if you hit control-C, Selenium shuts down the web browser
+        # immediately. However, we want to leave the meeting before
+        # disconnecting. So, we need to make the subprocess running the web
+        # browser be in a separate process group from ourselves, so it doesn't
+        # receive the SIGINT from the control-C.
+        # Solution inspired by https://stackoverflow.com/a/62430234
+        subprocess_Popen = subprocess.Popen
+        subprocess.Popen = functools.partial(subprocess_Popen, process_group=0)
         self._driver = Chrome(options=chrome_options)
+        subprocess.Popen = subprocess_Popen  # Undo the monkey patch
 
         raw_url = self._get_raw_url(url)
         self._logger.debug(f"parsed URL {url} to {raw_url}")
@@ -173,10 +184,6 @@ class ZoomMonitor():
         """
         try: # If anything goes wrong, close the browser anyway.
             # Find the "leave" button and click on it.
-            # TODO: this next line raises a urllib3.exceptions.MaxRetryError if
-            # called after you hit control-C to kill everything, but quits Zoom
-            # correctly if this gets called without hitting control-C. See if
-            # there's a way to get it to leave the Zoom room no matter what.
             self._driver.find_element(
                 By.CLASS_NAME, "footer__leave-btn").click()
             self._driver.find_element(
