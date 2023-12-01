@@ -22,6 +22,13 @@ def monitor_zoom(url, log_level):
         zoom.clean_up()
 
 
+class MeetingEndedException(Exception):
+    """
+    We'll raise this if we detect that the meeting has been ended by the host.
+    """
+    pass
+
+
 class ZoomMonitor():
     """
     Given a URL to a Zoom meeting, join the meeting using Selenium controlling
@@ -30,6 +37,7 @@ class ZoomMonitor():
     """
     def __init__(self, url, log_level):
         self._logger = getLogger(__name__)
+        self._meeting_ended = False
         setLevel(log_level)
 
         chrome_options = Options()
@@ -178,11 +186,29 @@ class ZoomMonitor():
         WebDriverWait(self._driver, 5).until(lambda _:
             len(self._driver.find_elements(approach, value)) != 0)
 
+    def _checkIfMeetingEnded(self):
+        """
+        Throw a MeetingEndedException if the meeting has been ended by the
+        host, and otherwise do nothing.
+        """
+        try:
+            modal_title = self._driver.find_element(
+                By.CLASS_NAME, "zm-modal-body-title")
+        except NoSuchElementException:
+            return
+
+        if modal_title.text == "This meeting has been ended by host":
+            self._meeting_ended = True  # Don't try logging out later
+            raise MeetingEndedException()
+
     def clean_up(self):
         """
         Leave the meeting and shut down the web server.
         """
         try: # If anything goes wrong, close the browser anyway.
+            if self._meeting_ended:
+                return  # Just abandon the meeting without trying to leave it.
+
             # Find the "leave" button and click on it.
             self._driver.find_element(
                 By.CLASS_NAME, "footer__leave-btn").click()
@@ -195,6 +221,10 @@ class ZoomMonitor():
         """
         Return the number of people in the participants list with raised hands
         """
+        # If the meeting has ended, we can't count the hands any more, so raise
+        # a MeetingEndedException.
+        self._checkIfMeetingEnded()
+
         # If someone starts recording the meeting, we'll get a pop-up modal
         # warning us about that before we can count hands again.
         self._acknowledge_recording()
