@@ -24,4 +24,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except (KeyboardInterrupt, MeetingEndedException):
-        pass  # Shut down cleanly when someone hits control-C.
+        pass  # Shut down cleanly
