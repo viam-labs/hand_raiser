@@ -1,23 +1,24 @@
 import asyncio
 from contextlib import asynccontextmanager
+import secrets
 
 from viam.components.servo import Servo
 from viam.logging import getLogger, setLevel
 from viam.robot.client import RobotClient
-from viam.rpc.dial import DialOptions
 
 
 @asynccontextmanager
-async def create_robot(creds, address, log_level):
+async def create_robot(log_level):
     """
     This makes a connection to the hardware, creates a Robot object, and then
     closes the connection when the context manager exits.
     """
-    opts = RobotClient.Options(
-        refresh_interval=0,
-        dial_options=DialOptions(credentials=creds)
+    opts = RobotClient.Options.with_api_key(
+        api_key=secrets.api_key,
+        api_key_id=secrets.api_key_id
     )
-    client = await RobotClient.at_address(address, opts)
+    client = await RobotClient.at_address(secrets.address, opts)
+
     servo = Servo.from_robot(client, "servo")
 
     robot = Robot(servo, log_level)
