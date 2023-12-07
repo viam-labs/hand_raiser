@@ -4,7 +4,7 @@ import sys
 
 from audience import Audience
 from robot import create_robot
-from zoom_monitor import monitor_zoom
+from zoom_monitor import monitor_zoom, MeetingEndedException
 
 
 async def main():
@@ -22,5 +22,5 @@ async def main():
 if __name__ == "__main__":
     try:
         asyncio.run(main())
-    except KeyboardInterrupt:
-        pass  # Shut down cleanly when someone hits control-C.
+    except (KeyboardInterrupt, MeetingEndedException):
+        pass  # Shut down cleanly
