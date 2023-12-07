@@ -1,11 +1,11 @@
 import asyncio
 from contextlib import asynccontextmanager
-import secrets
 
 from viam.components.servo import Servo
 from viam.logging import getLogger, setLevel
 from viam.robot.client import RobotClient
 
+import secrets
 
 @asynccontextmanager
 async def create_robot(log_level):
