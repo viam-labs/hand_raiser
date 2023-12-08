@@ -42,8 +42,10 @@ class ZoomMonitor():
 
         chrome_options = Options()
         chrome_options.add_argument("--headless=new")
-        # Uncomment this line to keep the browser open even after this process
-        # exits. It's a useful option when debugging or adding new features.
+        # Uncomment this next line to keep the browser open even after this
+        # process exits. It's a useful option when debugging or adding new
+        # features, though it's most useful when you comment out the previous
+        # line so the browser is headful.
         #chrome_options.add_experimental_option("detach", True)
 
         # Normally, if you hit control-C, Selenium shuts down the web browser
