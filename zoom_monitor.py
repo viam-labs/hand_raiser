@@ -41,6 +41,7 @@ class ZoomMonitor():
         setLevel(log_level)
 
         chrome_options = Options()
+        chrome_options.add_argument("--headless=new")
         # Uncomment this line to keep the browser open even after this process
         # exits. It's a useful option when debugging or adding new features.
         #chrome_options.add_experimental_option("detach", True)
