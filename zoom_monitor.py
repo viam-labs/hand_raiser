@@ -240,10 +240,11 @@ class ZoomMonitor():
         # warning us about that before we can count hands again.
         self._acknowledge_recording()
 
-        # WARNING: there's a race condition right here. If someone starts recording the meeting
-        # here, after _acknowledge_recording returns and before _open_participants_list runs, we
-        # will time out opening the list and crash. It's such an unlikely event that we haven't
-        # bothered fixing it yet.
+        # WARNING: there's a race condition right here. If someone starts
+        # recording the meeting here, after _acknowledge_recording returns and
+        # before _open_participants_list runs, we will time out opening the
+        # list and crash. It's such an unlikely event that we haven't bothered
+        # fixing it yet.
 
         # If someone else shares their screen, it closes the participants list.
         # So, try reopening it every time we want to count hands.
