@@ -58,12 +58,12 @@ class ZoomMonitor():
             # In recent versions of Python, Popen has a process_group argument
             # to put the new process in its own group.
             subprocess.Popen = functools.partial(
-                    subprocess_Popen, process_group=0)
+                subprocess_Popen, process_group=0)
         else:
             # In older versions, set a pre-execution function to create its own
             # process group instead.
             subprocess.Popen = functools.partial(
-                    subprocess_Popen, preexec_fn=os.setpgid)
+                subprocess_Popen, preexec_fn=os.setpgid)
         self._driver = Chrome(options=chrome_options)
         subprocess.Popen = subprocess_Popen  # Undo the monkey patch
 
@@ -139,7 +139,7 @@ class ZoomMonitor():
         # First, check if it's already opened, and if so return immediately.
         try:
             self._driver.find_element(
-                    By.CLASS_NAME, "participants-wrapper__inner")
+                By.CLASS_NAME, "participants-wrapper__inner")
             return  # Already opened!
         except NoSuchElementException:
             pass  # We need to open it.
@@ -160,7 +160,7 @@ class ZoomMonitor():
             # footer divs, and then click on the one that contains the
             # participants image.
             for outer in self._driver.find_elements(
-                    By.CLASS_NAME, "footer-button-base__img-layer"):
+                By.CLASS_NAME, "footer-button-base__img-layer"):
                 try:
                     self._logger.debug(f"trying to find participants in {outer}")
                     # Check if this footer button contains the participants
