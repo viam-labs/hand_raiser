@@ -1,6 +1,8 @@
 from contextlib import contextmanager
 import functools
+import os
 import subprocess
+import sys
 import time
 import urllib.parse
 
@@ -52,7 +54,16 @@ class ZoomMonitor():
         # receive the SIGINT from the control-C.
         # Solution inspired by https://stackoverflow.com/a/62430234
         subprocess_Popen = subprocess.Popen
-        subprocess.Popen = functools.partial(subprocess_Popen, process_group=0)
+        if sys.version_info.major == 3 and sys.version_info.minor >= 11:
+            # In recent versions of Python, Popen has a process_group argument
+            # to put the new process in its own group.
+            subprocess.Popen = functools.partial(
+                    subprocess_Popen, process_group=0)
+        else:
+            # In older versions, set a pre-execution function to create its own
+            # process group instead.
+            subprocess.Popen = functools.partial(
+                    subprocess_Popen, preexec_fn=os.setpgid)
         self._driver = Chrome(options=chrome_options)
         subprocess.Popen = subprocess_Popen  # Undo the monkey patch
 
