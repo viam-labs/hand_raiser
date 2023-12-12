@@ -63,7 +63,7 @@ class ZoomMonitor():
             # In older versions, set a pre-execution function to create its own
             # process group instead.
             subprocess.Popen = functools.partial(
-                subprocess_Popen, preexec_fn=os.setpgid)
+                subprocess_Popen, preexec_fn=lambda: os.setpgid(0, 0))
         self._driver = Chrome(options=chrome_options)
         subprocess.Popen = subprocess_Popen  # Undo the monkey patch
 
