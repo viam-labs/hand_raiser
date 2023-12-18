@@ -171,6 +171,7 @@ class ZoomMonitor():
 
                 try:
                     outer.click()
+                    outer.click() # Channeling our inner grandma
                     self._logger.debug("participants list clicked")
                 except ElementClickInterceptedException:
                     self._logger.debug("DOM isn't set up; wait and try again")
