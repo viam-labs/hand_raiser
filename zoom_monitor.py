@@ -170,8 +170,18 @@ class ZoomMonitor():
                     continue  # wrong footer element, try the next one
 
                 try:
+                    # For reasons we haven't figured out yet, something
+                    # changed in late 2023 so that clicking on the participants
+                    # list merely causes the button to be selected, not fully
+                    # clicked. As a small clue: if a human clicks on it, the
+                    # mouse-down makes the button selected, and the mouse-up
+                    # actually opens the participants list. We haven't tracked
+                    # down exactly what's going wrong, but double-clicking on
+                    # it seems to work okay (and Alan suspects that the second
+                    # click implicitly creates a mouse-up on the first one,
+                    # and that's the important part).
                     outer.click()
-                    outer.click() # Channeling our inner grandma
+                    outer.click()  # Channeling our inner grandma
                     self._logger.debug("participants list clicked")
                 except ElementClickInterceptedException:
                     self._logger.debug("DOM isn't set up; wait and try again")
