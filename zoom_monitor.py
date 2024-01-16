@@ -1,6 +1,8 @@
 from contextlib import contextmanager
 import functools
+import os
 import subprocess
+import sys
 import time
 import urllib.parse
 
@@ -52,7 +54,16 @@ class ZoomMonitor():
         # receive the SIGINT from the control-C.
         # Solution inspired by https://stackoverflow.com/a/62430234
         subprocess_Popen = subprocess.Popen
-        subprocess.Popen = functools.partial(subprocess_Popen, process_group=0)
+        if sys.version_info.major == 3 and sys.version_info.minor >= 11:
+            # In recent versions of Python, Popen has a process_group argument
+            # to put the new process in its own group.
+            subprocess.Popen = functools.partial(
+                subprocess_Popen, process_group=0)
+        else:
+            # In older versions, set a pre-execution function to create its own
+            # process group instead.
+            subprocess.Popen = functools.partial(
+                subprocess_Popen, preexec_fn=lambda: os.setpgid(0, 0))
         self._driver = Chrome(options=chrome_options)
         subprocess.Popen = subprocess_Popen  # Undo the monkey patch
 
@@ -128,7 +139,7 @@ class ZoomMonitor():
         # First, check if it's already opened, and if so return immediately.
         try:
             self._driver.find_element(
-                    By.CLASS_NAME, "participants-wrapper__inner")
+                By.CLASS_NAME, "participants-wrapper__inner")
             return  # Already opened!
         except NoSuchElementException:
             pass  # We need to open it.
@@ -142,14 +153,14 @@ class ZoomMonitor():
             # We want to click on an item in the class "SvgParticipantsDefault"
             # to open the participants list. However, that element is not
             # clickable, and instead throws an exception that the click would
-            # be intercepted by its parent element, a div in the class
-            # "footer-button-base__img-layer". So, we'd like to find that SVG
-            # element and then click on its parent. But it's not obvious how to
-            # do that in Selenium. So, instead let's look for all of those
-            # footer divs, and then click on the one that contains the
+            # be intercepted by its grandparent element, a button in the class
+            # "footer-button-base__button". So, we'd like to find that SVG
+            # element and then click on its grandparent. But it's not obvious
+            # how to do that in Selenium. So, instead let's look for all of
+            # those footer buttons, and then click on the one that contains the
             # participants image.
             for outer in self._driver.find_elements(
-                    By.CLASS_NAME, "footer-button-base__img-layer"):
+                    By.CLASS_NAME, "footer-button-base__button"):
                 try:
                     self._logger.debug(f"trying to find participants in {outer}")
                     # Check if this footer button contains the participants
@@ -159,7 +170,18 @@ class ZoomMonitor():
                     continue  # wrong footer element, try the next one
 
                 try:
+                    # For reasons we haven't figured out yet, something
+                    # changed in late 2023 so that clicking on the participants
+                    # list merely causes the button to be selected, not fully
+                    # clicked. As a small clue: if a human clicks on it, the
+                    # mouse-down makes the button selected, and the mouse-up
+                    # actually opens the participants list. We haven't tracked
+                    # down exactly what's going wrong, but double-clicking on
+                    # it seems to work okay (and Alan suspects that the second
+                    # click implicitly creates a mouse-up on the first one,
+                    # and that's the important part).
                     outer.click()
+                    outer.click()  # Channeling our inner grandma
                     self._logger.debug("participants list clicked")
                 except ElementClickInterceptedException:
                     self._logger.debug("DOM isn't set up; wait and try again")
@@ -229,10 +251,11 @@ class ZoomMonitor():
         # warning us about that before we can count hands again.
         self._acknowledge_recording()
 
-        # WARNING: there's a race condition right here. If someone starts recording the meeting
-        # here, after _acknowledge_recording returns and before _open_participants_list runs, we
-        # will time out opening the list and crash. It's such an unlikely event that we haven't
-        # bothered fixing it yet.
+        # WARNING: there's a race condition right here. If someone starts
+        # recording the meeting here, after _acknowledge_recording returns and
+        # before _open_participants_list runs, we will time out opening the
+        # list and crash. It's such an unlikely event that we haven't bothered
+        # fixing it yet.
 
         # If someone else shares their screen, it closes the participants list.
         # So, try reopening it every time we want to count hands.
