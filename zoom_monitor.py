@@ -160,7 +160,7 @@ class ZoomMonitor():
             # those footer buttons, and then click on the one that contains the
             # participants image.
             for outer in self._driver.find_elements(
-                By.CLASS_NAME, "footer-button-base__button"):
+                    By.CLASS_NAME, "footer-button-base__button"):
                 try:
                     self._logger.debug(f"trying to find participants in {outer}")
                     # Check if this footer button contains the participants
