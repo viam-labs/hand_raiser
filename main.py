@@ -16,7 +16,7 @@ async def main():
             while True:
                 count = zoom.count_hands()
                 await audience.set_count(count)
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.5)
 
 
 if __name__ == "__main__":
