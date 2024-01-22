@@ -10,7 +10,7 @@ from selenium.common.exceptions import (ElementClickInterceptedException,
                                         NoSuchElementException)
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
-#from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from viam.logging import getLogger, setLevel
