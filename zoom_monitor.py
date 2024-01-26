@@ -10,6 +10,7 @@ from selenium.common.exceptions import (ElementClickInterceptedException,
                                         NoSuchElementException)
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from viam.logging import getLogger, setLevel
@@ -146,6 +147,19 @@ class ZoomMonitor():
             return  # Already opened!
         except NoSuchElementException:
             pass  # We need to open it.
+
+        # Sometimes, the controls to open the participants list get hidden
+        # (for example, when someone stops sharing their screen, maybe?). In
+        # order to make the controls visible again, move the mouse. We move
+        # the mouse by finding a DOM component that should always be on the
+        # screen, and then moving the mouse to two locations near it.
+        main_element_id = "wc-content"
+        self._wait_for_element(By.ID, main_element_id)
+        main_element = self._driver.find_element(By.ID, main_element_id)
+        ActionChains(self._driver)\
+            .move_to_element_with_offset(main_element, 0, 0)\
+            .move_to_element_with_offset(main_element, 1, 1)\
+            .perform()
 
         self._wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
         # Right when we join Zoom, the participants button will exist but
