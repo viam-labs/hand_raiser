@@ -135,19 +135,7 @@ class ZoomMonitor():
         # This should allow us to open the participants list again.
         outer.find_element(By.CLASS_NAME, "zm-btn--primary").click()
 
-    def _open_participants_list(self):
-        """
-        Wait until we can open the participants list, then open it, then wait
-        until it's opened. This function returns nothing.
-        """
-        # First, check if it's already opened, and if so return immediately.
-        try:
-            self._driver.find_element(
-                By.CLASS_NAME, "participants-wrapper__inner")
-            return  # Already opened!
-        except NoSuchElementException:
-            pass  # We need to open it.
-
+    def _wiggle_mouse(self):
         # Sometimes, the controls to open the participants list get hidden
         # (for example, when someone stops sharing their screen, maybe?). In
         # order to make the controls visible again, move the mouse. We move
@@ -161,6 +149,20 @@ class ZoomMonitor():
             .move_to_element_with_offset(main_element, 1, 1)\
             .perform()
 
+    def _open_participants_list(self):
+        """
+        Wait until we can open the participants list, then open it, then wait
+        until it's opened. This function returns nothing.
+        """
+        # First, check if it's already opened, and if so return immediately.
+        try:
+            self._driver.find_element(
+                By.CLASS_NAME, "participants-wrapper__inner")
+            return  # Already opened!
+        except NoSuchElementException:
+            pass  # We need to open it.
+
+        self._wiggle_mouse()
         self._wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
         # Right when we join Zoom, the participants button will exist but
         # won't yet be clickable. There's something else we're supposed to wait
@@ -249,6 +251,7 @@ class ZoomMonitor():
                 return  # Just abandon the meeting without trying to leave it.
 
             # Find the "leave" button and click on it.
+            self._wiggle_mouse()
             self._driver.find_element(
                 By.CLASS_NAME, "footer__leave-btn").click()
             self._driver.find_element(
