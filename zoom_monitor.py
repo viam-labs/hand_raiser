@@ -173,18 +173,11 @@ class ZoomMonitor():
                     self._logger.debug(
                         f"trying to find participants default in {outer}")
                     # Check if this footer button contains the participants
-                    outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
+                    outer.find_element(
+                        By.XPATH, "//*[contains(@class, 'SvgParticipants')]")
                 except NoSuchElementException:
-                    try:
-                        self._logger.debug(
-                            f"trying to find participants hovered in {outer}"
-                        )
-                        # Check if this footer button contains the participants
-                        outer.find_element(
-                            By.CLASS_NAME, "SvgParticipantsHovered")      
-                    except NoSuchElementException:
-                        self._logger.debug("participants not present, next...")
-                        continue  # wrong footer element, try the next one
+                    self._logger.debug("participants not present, next...")
+                    continue  # wrong footer element, try the next one
 
                 try:
                     # For reasons we haven't figured out yet, something
@@ -197,10 +190,8 @@ class ZoomMonitor():
                     # it seems to work okay (and Alan suspects that the second
                     # click implicitly creates a mouse-up on the first one,
                     # and that's the important part).
-                    if hovering:
-                        outer.click()
-                    else:
-                        outer.click()
+                    outer.click()
+                    if not hovering:
                         outer.click()  # Channeling our inner grandma
                     self._logger.debug("participants list clicked")
                 except ElementClickInterceptedException:
