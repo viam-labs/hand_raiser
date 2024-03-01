@@ -148,12 +148,10 @@ class ZoomMonitor():
         except NoSuchElementException:
             pass  # We need to open it.
 
-        try:
-            self._wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
-            hovering = False
-        except TimeoutException:
-            self._wait_for_element(By.CLASS_NAME, "SvgParticipantsHovered")
-            hovering = True
+        element = self._wait_for_element(
+            By.XPATH, "//*[contains(@class, 'SvgParticipants')]")
+        hovering = element.get_attribute("class") == "SvgParticipantsHovered"
+        print(hovering, element.get_attribute("class"))
             
         # Right when we join Zoom, the participants button will exist but
         # won't yet be clickable. There's something else we're supposed to wait
@@ -229,6 +227,7 @@ class ZoomMonitor():
         """
         WebDriverWait(self._driver, 5).until(lambda _:
             len(self._driver.find_elements(approach, value)) != 0)
+        return self._driver.find_elements(approach, value)[0]
 
     def _checkIfMeetingEnded(self):
         """
