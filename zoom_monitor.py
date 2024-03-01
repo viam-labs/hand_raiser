@@ -151,7 +151,6 @@ class ZoomMonitor():
         element = self._wait_for_element(
             By.XPATH, "//*[contains(@class, 'SvgParticipants')]")
         hovering = element.get_attribute("class") == "SvgParticipantsHovered"
-        print(hovering, element.get_attribute("class"))
             
         # Right when we join Zoom, the participants button will exist but
         # won't yet be clickable. There's something else we're supposed to wait
