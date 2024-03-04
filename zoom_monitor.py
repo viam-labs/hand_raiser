@@ -10,10 +10,12 @@ from selenium.common.exceptions import (ElementClickInterceptedException,
                                         NoSuchElementException)
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from viam.logging import getLogger, setLevel
+
+
+PARTICIPANTS_BTN = "//*[contains(@class, 'SvgParticipants')]"
 
 
 @contextmanager
@@ -148,20 +150,9 @@ class ZoomMonitor():
         except NoSuchElementException:
             pass  # We need to open it.
 
-        # Sometimes, the controls to open the participants list get hidden
-        # (for example, when someone stops sharing their screen, maybe?). In
-        # order to make the controls visible again, move the mouse. We move
-        # the mouse by finding a DOM component that should always be on the
-        # screen, and then moving the mouse to two locations near it.
-        main_element_id = "wc-content"
-        self._wait_for_element(By.ID, main_element_id)
-        main_element = self._driver.find_element(By.ID, main_element_id)
-        ActionChains(self._driver)\
-            .move_to_element_with_offset(main_element, 0, 0)\
-            .move_to_element_with_offset(main_element, 1, 1)\
-            .perform()
-
-        self._wait_for_element(By.CLASS_NAME, "SvgParticipantsDefault")
+        element = self._wait_for_element(By.XPATH, PARTICIPANTS_BTN)
+        hovering = element.get_attribute("class") == "SvgParticipantsHovered"
+            
         # Right when we join Zoom, the participants button will exist but
         # won't yet be clickable. There's something else we're supposed to wait
         # for, but we can't figure out what. So, instead let's just try to
@@ -179,9 +170,10 @@ class ZoomMonitor():
             for outer in self._driver.find_elements(
                     By.CLASS_NAME, "footer-button-base__button"):
                 try:
-                    self._logger.debug(f"trying to find participants in {outer}")
+                    self._logger.debug(
+                        f"trying to find participants default in {outer}")
                     # Check if this footer button contains the participants
-                    outer.find_element(By.CLASS_NAME, "SvgParticipantsDefault")
+                    outer.find_element(By.XPATH, PARTICIPANTS_BTN)
                 except NoSuchElementException:
                     self._logger.debug("participants not present, next...")
                     continue  # wrong footer element, try the next one
@@ -197,8 +189,11 @@ class ZoomMonitor():
                     # it seems to work okay (and Alan suspects that the second
                     # click implicitly creates a mouse-up on the first one,
                     # and that's the important part).
+                    # If the button is already selected, only one click is
+                    # needed.
                     outer.click()
-                    outer.click()  # Channeling our inner grandma
+                    if not hovering:
+                        outer.click()  # Channeling our inner grandma
                     self._logger.debug("participants list clicked")
                 except ElementClickInterceptedException:
                     self._logger.debug("DOM isn't set up; wait and try again")
@@ -221,9 +216,11 @@ class ZoomMonitor():
         Wait until there is at least one element identified by the approach
         and value. If 5 seconds elapse without such an element appearing, we
         raise an exception.
+        Return the element the first element that is found.
         """
         WebDriverWait(self._driver, 5).until(lambda _:
             len(self._driver.find_elements(approach, value)) != 0)
+        return self._driver.find_elements(approach, value)[0]
 
     def _checkIfMeetingEnded(self):
         """
@@ -244,7 +241,7 @@ class ZoomMonitor():
         """
         Leave the meeting and shut down the web server.
         """
-        try: # If anything goes wrong, close the browser anyway.
+        try:  # If anything goes wrong, close the browser anyway.
             if self._meeting_ended:
                 return  # Just abandon the meeting without trying to leave it.
 
