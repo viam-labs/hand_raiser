@@ -53,12 +53,23 @@ class ZoomMonitor():
         # line so the browser is headful.
         #chrome_options.add_experimental_option("detach", True)
 
-        # Normally, if you hit control-C, Selenium shuts down the web browser
-        # immediately. However, we want to leave the meeting before
-        # disconnecting. So, we need to make the subprocess running the web
-        # browser be in a separate process group from ourselves, so it doesn't
-        # receive the SIGINT from the control-C.
-        # Solution inspired by https://stackoverflow.com/a/62430234
+        self._make_exit_subprocess(chrome_options)
+
+        raw_url = self._get_raw_url(url)
+        self._logger.debug(f"parsed URL {url} to {raw_url}")
+        self._driver.get(raw_url)
+
+        self._join_meeting()
+
+    def _make_exit_subprocess(self, chrome_options):
+        """
+        Normally, if you hit control-C, Selenium shuts down the web browser
+        immediately, but we want to leave the meeting before disconnecting.
+        Put the subprocess running the web browser in a separate process group
+        from ourselves, so it doesn't receive the SIGINT from the control-C.
+
+        Solution inspired by https://stackoverflow.com/a/62430234
+        """
         subprocess_Popen = subprocess.Popen
         if sys.version_info.major == 3 and sys.version_info.minor >= 11:
             # In recent versions of Python, Popen has a process_group argument
