@@ -143,7 +143,7 @@ class ZoomMonitor():
 
         Return if the button is selected or not.
         """
-        
+
         element = self._wait_for_element(By.XPATH, PARTICIPANTS_BTN)
         return element.get_attribute("class") == "SvgParticipantsHovered"
 
@@ -168,7 +168,7 @@ class ZoomMonitor():
         # continue, and retry a few times if it fails.
         for attempt in range(5):
             self._click_footer_element(selected)
-            return  # Success!            
+            return  # Success!
 
         # If we get here, none of our attempts opened the participants list.
         raise ElementClickInterceptedException(
@@ -187,7 +187,7 @@ class ZoomMonitor():
         """
         for outer in self._driver.find_elements(
             By.CLASS_NAME, "footer-button-base__button"):
-                
+
             try:
                 self._logger.debug(
                     f"trying to find participants default in {outer}")
