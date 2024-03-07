@@ -133,6 +133,20 @@ class ZoomMonitor():
         # Click "Got it" to acknowledge that the meeting is being recorded.
         outer.find_element(By.CLASS_NAME, "zm-btn--primary").click()
 
+    def _find_participants_button(self):
+        """
+        Find the participants button using the class name.
+
+        The two classes the participant button can have are:
+        "SvgParticipantsDefault" - the default button class.
+        "SvgParticipantsHovered" - the button is already selected.
+
+        Return if the button is selected or not.
+        """
+        
+        element = self._wait_for_element(By.XPATH, PARTICIPANTS_BTN)
+        return element.get_attribute("class") == "SvgParticipantsHovered"
+
     def _open_participants_list(self):
         """
         Wait until we can open the participants list, then open it, then wait
@@ -146,8 +160,7 @@ class ZoomMonitor():
         except NoSuchElementException:
             pass  # We need to open it.
 
-        element = self._wait_for_element(By.XPATH, PARTICIPANTS_BTN)
-        hovering = element.get_attribute("class") == "SvgParticipantsHovered"
+        selected = self._find_participants_button()
             
         # Right when we join Zoom, the participants button will exist but
         # won't yet be clickable. There's something else we're supposed to wait
