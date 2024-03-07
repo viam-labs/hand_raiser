@@ -84,31 +84,17 @@ class ZoomMonitor():
         self._driver = Chrome(options=chrome_options)
         subprocess.Popen = subprocess_Popen  # Undo the monkey patch
 
-        raw_url = self._get_raw_url(url)
-        self._logger.debug(f"parsed URL {url} to {raw_url}")
-        self._driver.get(raw_url)
-
-        self._join_meeting()
-
     @staticmethod
     def _get_raw_url(url):
         """
-        Remove any Google redirection to the Zoom meeting, and then return a
-        URL that should skip Zoom prompting you to open the link in their app
-        (so you definitely join the meeting inside the browser that Selenium
-        has opened).
+        Remove any Google redirection or Zoom prompts to the Zoom meeting.
+        Returns the URL needed to connect inside the Selenium browser.
         """
-        # On certain unusual shells, when you paste a URL, it automatically
-        # escapes the question mark symbol so the shell doesn't try to
-        # pattern-match on files in the file system. If you put the URL in
-        # quotes and still get those escapes, Zoom won't be able to find the
-        # passcode in the URL. So, in here, we first must remove all
-        # backslashes.
+        # Remove all blackslashes in case of any auto escapes on symbols.
         url = url.replace("\\", "")
 
-        # Google Calendar wraps its links in a redirect. Check for that first
-        # and remove it if relevant. The "real" URL is stored in the `q`
-        # parameter in the CGI arguments.
+        # Google Calendar wraps its links in a redirect. In these links, the
+        # "real" URL is stored in the `q` parameter in the CGI arguments.
         parsed_url = urllib.parse.urlparse(url)
         if "google.com" in parsed_url.netloc:
             cgi_params = urllib.parse.parse_qs(parsed_url.query)
