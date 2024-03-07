@@ -107,7 +107,7 @@ class ZoomMonitor():
 
     def _join_meeting(self):
         """
-        Set our name and join the meeting. This function returns nothing.
+        Set our name and join the meeting.
         """
         self._logger.debug("logging in...")
         self._wait_for_element(By.ID, "input-for-name")
@@ -131,7 +131,6 @@ class ZoomMonitor():
             return  # No one has started recording a video recently!
 
         # Click "Got it" to acknowledge that the meeting is being recorded.
-        # This should allow us to open the participants list again.
         outer.find_element(By.CLASS_NAME, "zm-btn--primary").click()
 
     def _open_participants_list(self):
