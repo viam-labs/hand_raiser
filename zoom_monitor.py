@@ -167,58 +167,60 @@ class ZoomMonitor():
         # for, but we can't figure out what. So, instead let's just try to
         # continue, and retry a few times if it fails.
         for attempt in range(5):
-            # We want to click on an item in the class "SvgParticipantsDefault"
-            # to open the participants list. However, that element is not
-            # clickable, and instead throws an exception that the click would
-            # be intercepted by its grandparent element, a button in the class
-            # "footer-button-base__button". So, we'd like to find that SVG
-            # element and then click on its grandparent. But it's not obvious
-            # how to do that in Selenium. So, instead let's look for all of
-            # those footer buttons, and then click on the one that contains the
-            # participants image.
-            for outer in self._driver.find_elements(
-                    By.CLASS_NAME, "footer-button-base__button"):
-                try:
-                    self._logger.debug(
-                        f"trying to find participants default in {outer}")
-                    # Check if this footer button contains the participants
-                    outer.find_element(By.XPATH, PARTICIPANTS_BTN)
-                except NoSuchElementException:
-                    self._logger.debug("participants not present, next...")
-                    continue  # wrong footer element, try the next one
-
-                try:
-                    # For reasons we haven't figured out yet, something
-                    # changed in late 2023 so that clicking on the participants
-                    # list merely causes the button to be selected, not fully
-                    # clicked. As a small clue: if a human clicks on it, the
-                    # mouse-down makes the button selected, and the mouse-up
-                    # actually opens the participants list. We haven't tracked
-                    # down exactly what's going wrong, but double-clicking on
-                    # it seems to work okay (and Alan suspects that the second
-                    # click implicitly creates a mouse-up on the first one,
-                    # and that's the important part).
-                    # If the button is already selected, only one click is
-                    # needed.
-                    outer.click()
-                    if not hovering:
-                        outer.click()  # Channeling our inner grandma
-                    self._logger.debug("participants list clicked")
-                except ElementClickInterceptedException:
-                    self._logger.debug("DOM isn't set up; wait and try again")
-                    time.sleep(1)  # The DOM isn't set up; wait a little longer
-                    break  # Go to the next overall attempt
-
-                # Now that we've clicked the participants list without raising
-                # an exception, wait until it shows up.
-                self._wait_for_element(
-                    By.CLASS_NAME, "participants-wrapper__inner")
-                self._logger.info("participants list opened")
-                return  # Success!
+            self._click_footer_element(selected)
+            return  # Success!            
 
         # If we get here, none of our attempts opened the participants list.
         raise ElementClickInterceptedException(
             f"Could not open participants list after {attempt + 1} attempts")
+
+    def _click_footer_element(self, selected: bool):
+        """We want to click on an item in the class "SvgParticipantsDefault"
+        to open the participants list. However, that element is not
+        clickable, and instead throws an exception that the click would
+        be intercepted by its grandparent element, a button in the class
+        "footer-button-base__button". So, we'd like to find that SVG
+        element and then click on its grandparent. But it's not obvious
+        how to do that in Selenium. So, instead let's look for all of
+        those footer buttons, and then click on the one that contains the
+        participants image.
+        """
+        for outer in self._driver.find_elements(
+            By.CLASS_NAME, "footer-button-base__button"):
+                
+            try:
+                self._logger.debug(
+                    f"trying to find participants default in {outer}")
+                # Check if this footer button contains the participants
+                outer.find_element(By.XPATH, PARTICIPANTS_BTN)
+            except NoSuchElementException:
+                self._logger.debug("participants not present, next...")
+                continue  # wrong footer element, try the next one
+            try:
+                # Clicking on the participants list merely causes the
+                # button to be selected, not fully clicked. As a small
+                # clue: if a human clicks on it, the mouse-down makes the
+                # button selected, and the mouse-up actually opens the
+                # participants list. Double-clicking on it seems to work
+                # okay (maybe the second click implicitly creates a
+                # mouse-up on the first one).
+                # If the button is already selected, only one click is
+                # needed.
+                outer.click()
+                if not selected:
+                    outer.click()  # Channeling our inner grandma
+                self._logger.debug("participants list clicked")
+            except ElementClickInterceptedException:
+                self._logger.debug("DOM isn't set up; wait and try again")
+                time.sleep(1)  # The DOM isn't set up; wait a little longer
+                break  # Go to the next overall attempt
+
+            # Now that we've clicked the participants list without raising
+            # an exception, wait until it shows up.
+            self._wait_for_element(
+                By.CLASS_NAME, "participants-wrapper__inner")
+            self._logger.info("participants list opened")
+            return  # Success!
 
     def _wait_for_element(self, approach, value):  # Helper function
         """
