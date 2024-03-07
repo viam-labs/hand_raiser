@@ -116,115 +116,13 @@ class ZoomMonitor():
         self._driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
         self._logger.info("logged into Zoom successfully")
 
-    def _acknowledge_recording(self):
-        """
-        If we are notified that someone is recording this meeting, click
-        through so we can count hands some more. This notification will come
-        either at the beginning if we joined when the recording was already
-        in progress, or in the middle of the meeting if someone starts
-        recording.
-        """
-        try:
-            outer = self._driver.find_element(
-                By.CLASS_NAME, "recording-disclaimer-dialog")
-        except NoSuchElementException:
-            return  # No one has started recording a video recently!
-
-        # Click "Got it" to acknowledge that the meeting is being recorded.
-        outer.find_element(By.CLASS_NAME, "zm-btn--primary").click()
-
-    def _is_selected(self):
-        """
-        Find the participants icon using the class name.
-
-        The two classes the participant icon can have are:
-        "SvgParticipantsDefault" - the default button class.
-        "SvgParticipantsHovered" - the button is already selected.
-
-        Return if the participants button is selected or not.
-        """
-
-        element = self._wait_for_element(By.XPATH, PARTICIPANTS_BTN)
-        return element.get_attribute("class") == "SvgParticipantsHovered"
-
-    def _open_participants_list(self):
-        """
-        Wait until we can open the participants list, then open it, then wait
-        until it's opened. This function returns nothing.
-        """
-        # First, check if it's already opened, and if so return immediately.
-        try:
-            self._driver.find_element(
-                By.CLASS_NAME, "participants-wrapper__inner")
-            return  # Already opened!
-        except NoSuchElementException:
-            pass  # We need to open it.
-
-        selected = self._is_selected()
-        # Right when we join Zoom, the participants button will exist but
-        # won't yet be clickable. There's something else we're supposed to wait
-        # for, but we can't figure out what. So, instead let's just try to
-        # continue, and retry a few times if it fails.
-        for attempt in range(5):
-            button = self._find_participants_button()
-            try:
-                # Clicking on the participants list merely causes the
-                # button to be selected, not fully clicked. As a small
-                # clue: if a human clicks on it, the mouse-down makes the
-                # button selected, and the mouse-up actually opens the
-                # participants list. Double-clicking on it seems to work
-                # okay (maybe the second click implicitly creates a
-                # mouse-up on the first one).
-                # If the button is already selected, only one click is
-                # needed.
-                button.click()
-                if not selected:
-                    button.click()  # Channeling our inner grandma
-                self._logger.debug("participants list clicked")
-            except ElementClickInterceptedException:
-                self._logger.debug("DOM isn't set up; wait and try again")
-                time.sleep(1)  # The DOM isn't set up; wait a little longer
-                break  # Go to the next overall attempt
-
-            # Now that we've clicked the participants list without raising
-            # an exception, wait until it shows up.
-            self._wait_for_element(
-                By.CLASS_NAME, "participants-wrapper__inner")
-            self._logger.info("participants list opened")
-            return  # Success!
-
-        # If we get here, none of our attempts opened the participants list.
-        raise ElementClickInterceptedException(
-            f"Could not open participants list after {attempt + 1} attempts")
-
-    def _find_participants_button(self):
-        """We want to click on an item with the participants icon. However,
-        the icon itself is not clickable. A click would be intercepted by its
-        grandparent element, a button with the class
-        "footer-button-base__button". Since it's not obvious how to click an
-        SVG element's grandparent, look through all footer buttons.
-
-        Return the button that contains the participants icon.
-        """
-        for outer in self._driver.find_elements(
-            By.CLASS_NAME, "footer-button-base__button"):
-
-            try:
-                self._logger.debug(
-                    f"trying to find participants default in {outer}")
-                # Check if this footer button contains the participants
-                outer.find_element(By.XPATH, PARTICIPANTS_BTN)
-                return outer
-            except NoSuchElementException:
-                self._logger.debug("participants not present, next...")
-                continue  # wrong footer element, try the next one
-
     def _wait_for_element(self, approach, value):  # Helper function
         """
         Wait until there is at least one element identified by the approach
         and value. If 5 seconds elapse without such an element appearing, we
         raise an exception.
-        Return the element the first element that is found.
+
+        Return the first element that is found.
         """
         WebDriverWait(self._driver, 5).until(lambda _:
             len(self._driver.find_elements(approach, value)) != 0)
@@ -244,6 +142,104 @@ class ZoomMonitor():
         if modal_title.text == "This meeting has been ended by host":
             self._meeting_ended = True  # Don't try logging out later
             raise MeetingEndedException()
+
+    def _acknowledge_recording(self):
+        """
+        If we are notified that someone is recording this meeting, click past
+        so we can count hands some more. This notification can come either at
+        the beginning if we joined when the recording was already in progress,
+        or in the middle of the meeting if someone starts recording.
+        """
+        try:
+            outer = self._driver.find_element(
+                By.CLASS_NAME, "recording-disclaimer-dialog")
+        except NoSuchElementException:
+            return  # No one has started recording a video recently!
+
+        # Click "Got it" to acknowledge that the meeting is being recorded.
+        outer.find_element(By.CLASS_NAME, "zm-btn--primary").click()
+
+    def _open_participants_list(self):
+        """
+        Wait until we can open the participants list, then open it, then wait
+        until it's opened.
+        """
+        # First, check if it's already opened, and if so return immediately.
+        try:
+            self._driver.find_element(
+                By.CLASS_NAME, "participants-wrapper__inner")
+            return  # Already opened!
+        except NoSuchElementException:
+            pass  # We need to open it.
+
+        selected = self._is_selected()
+        # Right when we join Zoom, the participants button is not clickable so
+        # we have to wait. Attempt to click the button a few times.
+        for attempt in range(5):
+            button = self._find_participants_button()
+            try:
+                # Clicking on the participants list only selects the button.
+                # As a small clue: if a human clicks on it, the mouse-down
+                # selects the button while the mouse-up opens the participants
+                # list. Double-clicking on it seems to work okay (maybe the
+                # second click implicitly creates a mouse-up on the first one).
+                # If the button is already selected, only one click is needed.
+                button.click()
+                if not selected:
+                    button.click()  # Channeling our inner grandma
+                self._logger.debug("participants list clicked")
+            except ElementClickInterceptedException:
+                self._logger.debug("DOM isn't set up; wait and try again")
+                time.sleep(1)  # The DOM isn't set up; wait a little longer
+                continue  # Go to the next attempt
+
+            # Now that we've clicked the participants list without raising
+            # an exception, wait until it shows up.
+            self._wait_for_element(
+                By.CLASS_NAME, "participants-wrapper__inner")
+            self._logger.info("participants list opened")
+            return  # Success!
+
+        # If we get here, none of our attempts opened the participants list.
+        raise ElementClickInterceptedException(
+            f"Could not open participants list after {attempt + 1} attempts")
+
+    def _is_selected(self):
+        """
+        Find the participants icon using the class name.
+
+        The two classes the participant icon can have are:
+        "SvgParticipantsDefault" - the default button class.
+        "SvgParticipantsHovered" - the button is already selected.
+
+        Return if the participants button is selected or not.
+        """
+
+        element = self._wait_for_element(By.XPATH, PARTICIPANTS_BTN)
+        return element.get_attribute("class") == "SvgParticipantsHovered"
+
+    def _find_participants_button(self):
+        """
+        We want to click on an item with the participants icon. However, the
+        icon itself is not clickable. A click would be intercepted by its
+        grandparent element, a button with the class
+        "footer-button-base__button". Since it's not obvious how to click an
+        SVG element's grandparent, look through all footer buttons.
+
+        Return the button that contains the participants icon.
+        """
+        for outer in self._driver.find_elements(
+            By.CLASS_NAME, "footer-button-base__button"):
+
+            try:
+                self._logger.debug(
+                    f"trying to find participants default in {outer}")
+                # Check if this footer button contains the participants
+                outer.find_element(By.XPATH, PARTICIPANTS_BTN)
+                return outer
+            except NoSuchElementException:
+                self._logger.debug("participants not present, next...")
+                continue  # wrong footer element, try the next one
 
     def clean_up(self):
         """
