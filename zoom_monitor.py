@@ -161,7 +161,6 @@ class ZoomMonitor():
             pass  # We need to open it.
 
         selected = self._find_participants_button()
-            
         # Right when we join Zoom, the participants button will exist but
         # won't yet be clickable. There's something else we're supposed to wait
         # for, but we can't figure out what. So, instead let's just try to
@@ -268,12 +267,7 @@ class ZoomMonitor():
         """
         Return the number of people in the participants list with raised hands
         """
-        # If the meeting has ended, we can't count the hands any more, so raise
-        # a MeetingEndedException.
         self._checkIfMeetingEnded()
-
-        # If someone starts recording the meeting, we'll get a pop-up modal
-        # warning us about that before we can count hands again.
         self._acknowledge_recording()
 
         # WARNING: there's a race condition right here. If someone starts
