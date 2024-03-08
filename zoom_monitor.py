@@ -53,7 +53,7 @@ class ZoomMonitor():
         # line so the browser is headful.
         #chrome_options.add_experimental_option("detach", True)
 
-        self._make_exit_subprocess(chrome_options)
+        self._driver = _spawn_browser_driver(chrome_options)
 
         raw_url = self._get_raw_url(url)
         self._logger.debug(f"parsed URL {url} to {raw_url}")
@@ -61,36 +61,13 @@ class ZoomMonitor():
 
         self._join_meeting()
 
-    def _make_exit_subprocess(self, chrome_options):
-        """
-        Normally, if you hit control-C, Selenium shuts down the web browser
-        immediately, but we want to leave the meeting before disconnecting.
-        Put the subprocess running the web browser in a separate process group
-        from ourselves, so it doesn't receive the SIGINT from the control-C.
-
-        Solution inspired by https://stackoverflow.com/a/62430234
-        """
-        subprocess_Popen = subprocess.Popen
-        if sys.version_info.major == 3 and sys.version_info.minor >= 11:
-            # In recent versions of Python, Popen has a process_group argument
-            # to put the new process in its own group.
-            subprocess.Popen = functools.partial(
-                subprocess_Popen, process_group=0)
-        else:
-            # In older versions, set a pre-execution function to create its own
-            # process group instead.
-            subprocess.Popen = functools.partial(
-                subprocess_Popen, preexec_fn=lambda: os.setpgid(0, 0))
-        self._driver = Chrome(options=chrome_options)
-        subprocess.Popen = subprocess_Popen  # Undo the monkey patch
-
     @staticmethod
     def _get_raw_url(url):
         """
         Remove any Google redirection or Zoom prompts to the Zoom meeting.
         Returns the URL needed to connect inside the Selenium browser.
         """
-        # Remove all blackslashes in case of any auto escapes on symbols.
+        # Remove all blackslashes since shells may automatically add them.
         url = url.replace("\\", "")
 
         # Google Calendar wraps its links in a redirect. In these links, the
@@ -143,7 +120,7 @@ class ZoomMonitor():
             self._meeting_ended = True  # Don't try logging out later
             raise MeetingEndedException()
 
-    def _acknowledge_recording(self):
+    def _ignore_recording(self):
         """
         If we are notified that someone is recording this meeting, click past
         so we can count hands some more. This notification can come either at
@@ -172,7 +149,7 @@ class ZoomMonitor():
         except NoSuchElementException:
             pass  # We need to open it.
 
-        selected = self._is_selected()
+        selected = self._is_participants_button_selected()
         # Right when we join Zoom, the participants button is not clickable so
         # we have to wait. Attempt to click the button a few times.
         for attempt in range(5):
@@ -190,7 +167,7 @@ class ZoomMonitor():
                 self._logger.debug("participants list clicked")
             except ElementClickInterceptedException:
                 self._logger.debug("DOM isn't set up; wait and try again")
-                time.sleep(1)  # The DOM isn't set up; wait a little longer
+                time.sleep(1)
                 continue  # Go to the next attempt
 
             # Now that we've clicked the participants list without raising
@@ -204,7 +181,7 @@ class ZoomMonitor():
         raise ElementClickInterceptedException(
             f"Could not open participants list after {attempt + 1} attempts")
 
-    def _is_selected(self):
+    def _is_participants_button_selected(self):
         """
         Find the participants icon using the class name.
 
@@ -212,7 +189,7 @@ class ZoomMonitor():
         "SvgParticipantsDefault" - the default button class.
         "SvgParticipantsHovered" - the button is already selected.
 
-        Return if the participants button is selected or not.
+        Return whether the participants button is selected or not.
         """
 
         element = self._wait_for_element(By.XPATH, PARTICIPANTS_BTN)
@@ -240,6 +217,8 @@ class ZoomMonitor():
             except NoSuchElementException:
                 self._logger.debug("participants not present, next...")
                 continue  # wrong footer element, try the next one
+        if outer is None:
+            raise NoSuchElementException("could not find participants button")
 
     def clean_up(self):
         """
@@ -262,10 +241,10 @@ class ZoomMonitor():
         Return the number of people in the participants list with raised hands
         """
         self._checkIfMeetingEnded()
-        self._acknowledge_recording()
+        self._ignore_recording()
 
         # WARNING: there's a race condition right here. If someone starts
-        # recording the meeting here, after _acknowledge_recording returns and
+        # recording the meeting here, after _ignore_recording returns and
         # before _open_participants_list runs, we will time out opening the
         # list and crash. It's such an unlikely event that we haven't bothered
         # fixing it yet.
@@ -285,3 +264,29 @@ class ZoomMonitor():
         return len(self._driver.find_elements(
             By.XPATH, "//*[@class='participants-wrapper__inner']"
                       "//*[contains(@class, '270b')]"))
+
+
+def _spawn_browser_driver(chrome_options: Options):
+    """
+    Normally, if you hit control-C, Selenium shuts down the web browser
+    immediately, but we want to leave the meeting before disconnecting.
+    Put the subprocess running the web browser in a separate process group
+    from ourselves, so it doesn't receive the SIGINT from the control-C.
+    Solution inspired by https://stackoverflow.com/a/62430234
+
+    Return the created driver.
+    """
+    subprocess_Popen = subprocess.Popen
+    if sys.version_info.major == 3 and sys.version_info.minor >= 11:
+        # In recent versions of Python, Popen has a process_group argument
+        # to put the new process in its own group.
+        subprocess.Popen = functools.partial(
+            subprocess_Popen, process_group=0)
+    else:
+        # In older versions, set a pre-execution function to create its own
+        # process group instead.
+        subprocess.Popen = functools.partial(
+            subprocess_Popen, preexec_fn=lambda: os.setpgid(0, 0))
+    driver = Chrome(options=chrome_options)
+    subprocess.Popen = subprocess_Popen  # Undo the monkey patch
+    return driver
