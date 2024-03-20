@@ -15,7 +15,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from viam.logging import getLogger, setLevel
 
 
-PARTICIPANTS_BTN = "//*[contains(@class, 'SvgParticipants')]"
+PARTICIPANTS_BTN = ".//*[contains(@class, 'SvgParticipants')]"
 
 
 @contextmanager
@@ -149,12 +149,12 @@ class ZoomMonitor():
         except NoSuchElementException:
             pass  # We need to open it.
 
-        selected = self._is_participants_button_selected()
         # Right when we join Zoom, the participants button is not clickable so
         # we have to wait. Attempt to click the button a few times.
         for attempt in range(5):
             button = self._find_participants_button()
             try:
+                selected = self._is_participants_button_selected()
                 # Clicking on the participants list only selects the button.
                 # As a small clue: if a human clicks on it, the mouse-down
                 # selects the button while the mouse-up opens the participants
