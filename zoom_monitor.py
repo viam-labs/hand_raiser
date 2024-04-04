@@ -15,6 +15,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from viam.logging import getLogger, setLevel
 
 
+# XPath path expression to find participants button node
 PARTICIPANTS_BTN = ".//*[contains(@class, 'SvgParticipants')]"
 
 
@@ -152,9 +153,15 @@ class ZoomMonitor():
         # Right when we join Zoom, the participants button is not clickable so
         # we have to wait. Attempt to click the button a few times.
         for attempt in range(5):
-            button = self._find_participants_button()
             try:
-                selected = self._is_participants_button_selected()
+                button = self._find_participants_button()
+            except NoSuchElementException:
+                self._logger.debug("Could not find participants button.")
+                time.sleep(1)
+                continue  # Go to the next attempt
+
+            selected = self._is_participants_button_selected()
+            try:
                 # Clicking on the participants list only selects the button.
                 # As a small clue: if a human clicks on it, the mouse-down
                 # selects the button while the mouse-up opens the participants
@@ -164,12 +171,12 @@ class ZoomMonitor():
                 button.click()
                 if not selected:
                     button.click()  # Channeling our inner grandma
-                self._logger.debug("participants list clicked")
             except ElementClickInterceptedException:
                 self._logger.debug("DOM isn't set up; wait and try again")
                 time.sleep(1)
                 continue  # Go to the next attempt
 
+            self._logger.debug("participants list clicked")
             # Now that we've clicked the participants list without raising
             # an exception, wait until it shows up.
             self._wait_for_element(
@@ -217,8 +224,7 @@ class ZoomMonitor():
             except NoSuchElementException:
                 self._logger.debug("participants not present, next...")
                 continue  # wrong footer element, try the next one
-        if outer is None:
-            raise NoSuchElementException("could not find participants button")
+        raise NoSuchElementException("could not find participants button")
 
     def clean_up(self):
         """
