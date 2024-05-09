@@ -47,26 +47,7 @@ class ZoomMonitor():
         self._meeting_ended = False
         setLevel(log_level)
 
-        chrome_options = Options()
-        #chrome_options.add_argument("--headless=new")
-
-        # Chromium can hang if something else is using its default remote
-        # debugging port (e.g., if you've got another Chromium window open at
-        # the same time. So, we give our Chromium window a brand new, ephemeral
-        # port. This solution was taken from Jingyu Lei's comment on
-        # https://stackoverflow.com/q/60151593
-        sock=socket.socket()
-        sock.bind(("", 0))
-        port = sock.getsockname()[1]
-        chrome_options.add_argument(f"--remote-debugging-port={port}")
-
-        # Uncomment this next line to keep the browser open even after this
-        # process exits. It's a useful option when debugging or adding new
-        # features, though it's most useful when you comment out the previous
-        # line so the browser is headful.
-        #chrome_options.add_experimental_option("detach", True)
-
-        self._driver = _spawn_browser_driver(chrome_options)
+        self._driver = _spawn_browser_driver()
 
         raw_url = self._get_raw_url(url)
         self._logger.debug(f"parsed URL {url} to {raw_url}")
@@ -284,7 +265,7 @@ class ZoomMonitor():
                       "//*[contains(@class, '270b')]"))
 
 
-def _spawn_browser_driver(chrome_options: Options):
+def _spawn_browser_driver():
     """
     Normally, if you hit control-C, Selenium shuts down the web browser
     immediately, but we want to leave the meeting before disconnecting.
@@ -305,6 +286,29 @@ def _spawn_browser_driver(chrome_options: Options):
         # process group instead.
         subprocess.Popen = functools.partial(
             subprocess_Popen, preexec_fn=lambda: os.setpgid(0, 0))
-    driver = Chrome(options=chrome_options)
+    driver = Chrome(options=_get_chrome_options())
     subprocess.Popen = subprocess_Popen  # Undo the monkey patch
     return driver
+
+def _get_chrome_options():
+    chrome_options = Options()
+    #chrome_options.add_argument("--headless=new")
+
+    # Chromium can hang if something else is using its default remote
+    # debugging port (e.g., if you've got another Chromium window open at
+    # the same time. So, we give our Chromium window a brand new, ephemeral
+    # port. This solution was taken from Jingyu Lei's comment on
+    # https://stackoverflow.com/q/60151593
+    sock=socket.socket()
+    sock.bind(("", 0))
+    port = sock.getsockname()[1]
+    chrome_options.add_argument(f"--remote-debugging-port={port}")
+
+    # Uncomment this next line to keep the browser open even after this
+    # process exits. It's a useful option when debugging or adding new
+    # features, though it's most useful when you comment out the previous
+    # line so the browser is headful.
+    #chrome_options.add_experimental_option("detach", True)
+
+    return chrome_options
+
