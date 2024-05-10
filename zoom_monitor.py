@@ -1,19 +1,14 @@
 from contextlib import contextmanager
-import functools
-import os
-import subprocess
-import sys
 import time
 import urllib.parse
 
 from selenium.common.exceptions import (ElementClickInterceptedException,
                                         NoSuchElementException)
-from selenium.webdriver import Chrome
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from viam.logging import getLogger, setLevel
 
+import browser
 
 # XPath path expression to find participants button node
 PARTICIPANTS_BTN = ".//*[contains(@class, 'SvgParticipants')]"
@@ -46,15 +41,7 @@ class ZoomMonitor():
         self._meeting_ended = False
         setLevel(log_level)
 
-        chrome_options = Options()
-        chrome_options.add_argument("--headless=new")
-        # Uncomment this next line to keep the browser open even after this
-        # process exits. It's a useful option when debugging or adding new
-        # features, though it's most useful when you comment out the previous
-        # line so the browser is headful.
-        #chrome_options.add_experimental_option("detach", True)
-
-        self._driver = _spawn_browser_driver(chrome_options)
+        self._driver = browser.spawn_driver()
 
         raw_url = self._get_raw_url(url)
         self._logger.debug(f"parsed URL {url} to {raw_url}")
@@ -271,29 +258,3 @@ class ZoomMonitor():
         return len(self._driver.find_elements(
             By.XPATH, "//*[@class='participants-wrapper__inner']"
                       "//*[contains(@class, '270b')]"))
-
-
-def _spawn_browser_driver(chrome_options: Options):
-    """
-    Normally, if you hit control-C, Selenium shuts down the web browser
-    immediately, but we want to leave the meeting before disconnecting.
-    Put the subprocess running the web browser in a separate process group
-    from ourselves, so it doesn't receive the SIGINT from the control-C.
-    Solution inspired by https://stackoverflow.com/a/62430234
-
-    Return the created driver.
-    """
-    subprocess_Popen = subprocess.Popen
-    if sys.version_info.major == 3 and sys.version_info.minor >= 11:
-        # In recent versions of Python, Popen has a process_group argument
-        # to put the new process in its own group.
-        subprocess.Popen = functools.partial(
-            subprocess_Popen, process_group=0)
-    else:
-        # In older versions, set a pre-execution function to create its own
-        # process group instead.
-        subprocess.Popen = functools.partial(
-            subprocess_Popen, preexec_fn=lambda: os.setpgid(0, 0))
-    driver = Chrome(options=chrome_options)
-    subprocess.Popen = subprocess_Popen  # Undo the monkey patch
-    return driver
