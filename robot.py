@@ -110,7 +110,7 @@ class Robot:
                     await self._servo.move(self.UPPER_POSITION -
                                            self.WIGGLE_AMOUNT)
                     await asyncio.sleep(self.WIGGLE_DELAY_S)
-                # Now that we're done wiggle for now, put the arm back up.
+                # Now that we're done wiggling for now, put the arm back up.
                 self._logger.debug("stop wiggling")
                 await self._servo.move(self.UPPER_POSITION)
         except asyncio.CancelledError:
