@@ -35,7 +35,7 @@ class Robot:
     LOWER_POSITION = 152
     WIGGLE_AMOUNT = 7  # Move this much left and right of UPPER_POSITION
     WIGGLE_DELAY_S = 0.5
-    INACTIVITY_PERIOD_S = 30
+    INACTIVITY_PERIOD_S = 60
 
     def __init__(self, servo, log_level):
         """
@@ -103,7 +103,7 @@ class Robot:
             while True:
                 await asyncio.sleep(self.INACTIVITY_PERIOD_S)
                 self._logger.debug("wiggle wiggle wiggle")
-                for _ in range(3):
+                for _ in range(1):
                     await self._servo.move(self.UPPER_POSITION +
                                            self.WIGGLE_AMOUNT)
                     await asyncio.sleep(self.WIGGLE_DELAY_S)
