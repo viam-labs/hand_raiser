@@ -14,7 +14,7 @@ When we have large meetings, sometimes the remote employees are unable to partic
    - Note that if you copy a Slack-generated Zoom link, the robot will end up opening Slack and not a Zoom window. To work around this, get in the Zoom yourself, click the up arrow on the Participants list button, and click "Copy invite link." That URL will work with the hand raiser.
 2. This will open a Chrome window and join the Zoom meeting as the user "Hand Raiser Bot."
 3. Whenever someone in the Zoom meeting selects the "Raise Hand" reaction, the servo on the robot moves. The hand will be raised whenever _at least 1_ person in the Zoom meeting has their hand raised, and lowered again when no one has their hand raised.
-4. If the hand has been raised for at least 30 seconds, it will begin to wiggle side-to-side at intervals to try to gain attention.
+4. If the hand has been raised for long enough, it will begin to wiggle side-to-side at intervals to try to gain attention.
 5. Once a Zoom participant has been called upon, they should lower their hand in the Zoom interface! This will lower the robot hand, unless other meeting participants also have raised hands in Zoom.
 6. When the meeting is over (or when you want Hand Raiser Bot to leave), hit control-C in the terminal to shut everything down. This will also lower the servo even if someone in the Zoom meeting still has their hand raised.
 
@@ -22,6 +22,6 @@ When we have large meetings, sometimes the remote employees are unable to partic
 - `robot.py` talks to `viam-server` to move the hardware itself. The code in this file raises and lowers the servo, and wiggles it if it has been raised for a while.
 - `audience.py` keeps track of how many hands are raised. This tells the robot when it's time to raise and lower the hand.
 - `zoom_monitor.py` uses Selenium to open a web browser and join the Zoom meeting. It counts how many participants in the meeting have their hands raised.
-  - As of summer 2023, Zoom did not have an official API for participart reactions like whether someone has raised their hand. Consequently, we're getting this data by webscraping with Selenium.
+  - As of summer 2023, Zoom did not have an official API for participant reactions like whether someone has raised their hand. Consequently, we're getting this data by webscraping with Selenium.
 - `secrets.py` contains the way to connect to the robot itself. This repo does not contain production data: this file must be edited before things will work.
 - `main.py` ties everything together: it sets up a ZoomMonitor, connects to a robot, wraps the robot in an Audience object, and then sets the hand count in the Audience based on what is reported from the ZoomMonitor.
