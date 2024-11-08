@@ -3,7 +3,11 @@ import time
 import urllib.parse
 
 from selenium.common.exceptions import (ElementClickInterceptedException,
-                                        NoSuchElementException)
+                                        ElementNotInteractableException,
+                                        NoSuchElementException,
+                                        TimeoutException
+                                        )
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from viam.logging import getLogger, setLevel
@@ -12,6 +16,7 @@ import browser
 
 # XPath path expression to find participants button node
 PARTICIPANTS_BTN = ".//*[contains(@class, 'SvgParticipants')]"
+ARIA_SELECTOR = "button[aria-label*='participant']"
 
 
 @contextmanager
@@ -44,7 +49,7 @@ class ZoomMonitor():
         self._driver = browser.spawn_driver()
 
         raw_url = self._get_raw_url(url)
-        self._logger.debug(f"parsed URL {url} to {raw_url}")
+        self._logger.info(f"parsed URL {url} to {raw_url}")
         self._driver.get(raw_url)
 
         self._join_meeting()
@@ -74,7 +79,7 @@ class ZoomMonitor():
         """
         Set our name and join the meeting.
         """
-        self._logger.debug("logging in...")
+        self._logger.info("logging in...")
         self._wait_for_element(By.ID, "input-for-name")
         self._driver.find_element(By.ID, "input-for-name").send_keys(
             "Hand Raiser Bot")
@@ -144,7 +149,7 @@ class ZoomMonitor():
             try:
                 button = self._find_participants_button()
             except NoSuchElementException:
-                self._logger.debug("Could not find participants button.")
+                self._logger.info("Could not find participants button.")
                 time.sleep(1)
                 continue  # Go to the next attempt
 
@@ -156,15 +161,20 @@ class ZoomMonitor():
                 # list. Double-clicking on it seems to work okay (maybe the
                 # second click implicitly creates a mouse-up on the first one).
                 # If the button is already selected, only one click is needed.
+                ActionChains(self._driver).move_to_element(button).perform()
                 button.click()
-                if not selected:
-                    button.click()  # Channeling our inner grandma
-            except ElementClickInterceptedException:
-                self._logger.debug("DOM isn't set up; wait and try again")
+                try:
+                    self._wait_for_element(
+                        By.CLASS_NAME, "participants-wrapper__inner", timeout_s=0.5)
+                except TimeoutException:
+                    button.click()  # Try clicking again, channeling our inner grandma
+            except (ElementClickInterceptedException, ElementNotInteractableException) as e:
+                self._logger.info("got exception: {}".format(e))
+                self._logger.info("DOM isn't set up; wait and try again")
                 time.sleep(1)
                 continue  # Go to the next attempt
 
-            self._logger.debug("participants list clicked")
+            self._logger.info("participants list clicked")
             # Now that we've clicked the participants list without raising
             # an exception, wait until it shows up.
             self._wait_for_element(
@@ -204,13 +214,13 @@ class ZoomMonitor():
             By.CLASS_NAME, "footer-button-base__button"):
 
             try:
-                self._logger.debug(
+                self._logger.info(
                     f"trying to find participants default in {outer}")
                 # Check if this footer button contains the participants
                 outer.find_element(By.XPATH, PARTICIPANTS_BTN)
                 return outer
             except NoSuchElementException:
-                self._logger.debug("participants not present, next...")
+                self._logger.info("participants not present, next...")
                 continue  # wrong footer element, try the next one
         raise NoSuchElementException("could not find participants button")
 
