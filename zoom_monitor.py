@@ -48,7 +48,7 @@ class ZoomMonitor():
         self._driver = browser.spawn_driver()
 
         raw_url = self._get_raw_url(url)
-        self._logger.info(f"parsed URL {url} to {raw_url}")
+        self._logger.debug(f"parsed URL {url} to {raw_url}")
         self._driver.get(raw_url)
 
         self._join_meeting()
@@ -78,7 +78,7 @@ class ZoomMonitor():
         """
         Set our name and join the meeting.
         """
-        self._logger.info("logging in...")
+        self._logger.debug("logging in...")
         self._wait_for_element(By.ID, "input-for-name")
         self._driver.find_element(By.ID, "input-for-name").send_keys(
             "Hand Raiser Bot")
@@ -148,7 +148,7 @@ class ZoomMonitor():
             try:
                 button = self._find_participants_button()
             except NoSuchElementException:
-                self._logger.info("Could not find participants button.")
+                self._logger.debug("Could not find participants button.")
                 time.sleep(1)
                 continue  # Go to the next attempt
 
@@ -158,7 +158,7 @@ class ZoomMonitor():
                 # tends to happen after someone stops sharing their screen.
                 ActionChains(self._driver).move_to_element(button).perform()
                 button.click()
-                self._logger.info("participants list clicked")
+                self._logger.debug("participants list clicked")
                 # Now that we've clicked the participants list without raising
                 # an exception, wait until it shows up. If it doesn't show up
                 # yet, it might be that we've highlighted the button but
@@ -169,8 +169,8 @@ class ZoomMonitor():
             except (ElementClickInterceptedException,
                     ElementNotInteractableException,
                     TimeoutException) as e:
-                self._logger.info("got exception: {}".format(e))
-                self._logger.info("DOM isn't set up; wait and try again")
+                self._logger.debug("got exception: {}".format(e))
+                self._logger.debug("DOM isn't set up; wait and try again")
                 time.sleep(1)
                 continue  # Go to the next attempt
             self._logger.info("participants list opened")
@@ -194,13 +194,13 @@ class ZoomMonitor():
             By.CLASS_NAME, "footer-button-base__button"):
 
             try:
-                self._logger.info(
+                self._logger.debug(
                     f"trying to find participants default in {outer}")
                 # Check if this footer button contains the participants
                 outer.find_element(By.XPATH, PARTICIPANTS_BTN)
                 return outer
             except NoSuchElementException:
-                self._logger.info("participants not present, next...")
+                self._logger.debug("participants not present, next...")
                 continue  # wrong footer element, try the next one
         raise NoSuchElementException("could not find participants button")
 
