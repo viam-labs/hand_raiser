@@ -16,7 +16,6 @@ import browser
 
 # XPath path expression to find participants button node
 PARTICIPANTS_BTN = ".//*[contains(@class, 'SvgParticipants')]"
-ARIA_SELECTOR = "button[aria-label*='participant']"
 
 
 @contextmanager
@@ -153,52 +152,33 @@ class ZoomMonitor():
                 time.sleep(1)
                 continue  # Go to the next attempt
 
-            selected = self._is_participants_button_selected()
             try:
-                # Clicking on the participants list only selects the button.
-                # As a small clue: if a human clicks on it, the mouse-down
-                # selects the button while the mouse-up opens the participants
-                # list. Double-clicking on it seems to work okay (maybe the
-                # second click implicitly creates a mouse-up on the first one).
-                # If the button is already selected, only one click is needed.
+                # Sometimes, the button is hidden off the bottom of the window,
+                # but moving the mouse to it will make it visible again. This
+                # tends to happen after someone stops sharing their screen.
                 ActionChains(self._driver).move_to_element(button).perform()
                 button.click()
-                try:
-                    self._wait_for_element(
-                        By.CLASS_NAME, "participants-wrapper__inner", timeout_s=0.5)
-                except TimeoutException:
-                    button.click()  # Try clicking again, channeling our inner grandma
-            except (ElementClickInterceptedException, ElementNotInteractableException) as e:
+                self._logger.info("participants list clicked")
+                # Now that we've clicked the participants list without raising
+                # an exception, wait until it shows up. If it doesn't show up
+                # yet, it might be that we've highlighted the button but
+                # haven't properly clicked it, and the next iteration's attempt
+                # will succeed.
+                self._wait_for_element(
+                    By.CLASS_NAME, "participants-wrapper__inner")
+            except (ElementClickInterceptedException,
+                    ElementNotInteractableException,
+                    TimeoutException) as e:
                 self._logger.info("got exception: {}".format(e))
                 self._logger.info("DOM isn't set up; wait and try again")
                 time.sleep(1)
                 continue  # Go to the next attempt
-
-            self._logger.info("participants list clicked")
-            # Now that we've clicked the participants list without raising
-            # an exception, wait until it shows up.
-            self._wait_for_element(
-                By.CLASS_NAME, "participants-wrapper__inner")
             self._logger.info("participants list opened")
             return  # Success!
 
         # If we get here, none of our attempts opened the participants list.
         raise ElementClickInterceptedException(
             f"Could not open participants list after {attempt + 1} attempts")
-
-    def _is_participants_button_selected(self):
-        """
-        Find the participants icon using the class name.
-
-        The two classes the participant icon can have are:
-        "SvgParticipantsDefault" - the default button class.
-        "SvgParticipantsHovered" - the button is already selected.
-
-        Return whether the participants button is selected or not.
-        """
-
-        element = self._wait_for_element(By.XPATH, PARTICIPANTS_BTN)
-        return element.get_attribute("class") == "SvgParticipantsHovered"
 
     def _find_participants_button(self):
         """
