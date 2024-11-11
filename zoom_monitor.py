@@ -197,9 +197,8 @@ class ZoomMonitor():
         """
         for outer in self._driver.find_elements(By.CLASS_NAME,
                                                 "footer-button-base__button"):
+            self._logger.debug(f"trying to find participants button in {outer}")
             try:
-                self._logger.debug(
-                    f"trying to find participants default in {outer}")
                 # Check if this footer button contains the participants
                 outer.find_element(By.XPATH, PARTICIPANTS_BTN)
                 return outer
