@@ -172,11 +172,10 @@ class ZoomMonitor():
                 # haven't properly clicked it, and the next iteration's attempt
                 # will succeed.
                 self._wait_for_element(
-                    By.CLASS_NAME, "participants-wrapper__inner")
+                    By.CLASS_NAME, "participants-wrapper__inner", timeout_s=1)
             except TimeoutException:
                 self._logger.debug("timed out waiting for participants list,"
                                    "will try clicking again soon.")
-                time.sleep(1)
                 continue  # Go to the next attempt
             self._logger.info("participants list opened")
             return  # Success!
