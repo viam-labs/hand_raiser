@@ -14,6 +14,7 @@ from viam.logging import getLogger, setLevel
 
 import browser
 
+
 # XPath path expression to find participants button node
 PARTICIPANTS_BTN = ".//*[contains(@class, 'SvgParticipants')]"
 
@@ -194,9 +195,8 @@ class ZoomMonitor():
 
         Return the button that contains the participants icon.
         """
-        for outer in self._driver.find_elements(
-            By.CLASS_NAME, "footer-button-base__button"):
-
+        for outer in self._driver.find_elements(By.CLASS_NAME,
+                                                "footer-button-base__button"):
             try:
                 self._logger.debug(
                     f"trying to find participants default in {outer}")
