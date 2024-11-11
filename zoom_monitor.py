@@ -99,7 +99,7 @@ class ZoomMonitor():
             len(self._driver.find_elements(approach, value)) != 0)
         return self._driver.find_elements(approach, value)[0]
 
-    def _checkIfMeetingEnded(self):
+    def _check_if_meeting_ended(self):
         """
         Throw a MeetingEndedException if the meeting has been ended by the
         host, and otherwise do nothing.
@@ -227,7 +227,7 @@ class ZoomMonitor():
         """
         Return the number of people in the participants list with raised hands
         """
-        self._checkIfMeetingEnded()
+        self._check_if_meeting_ended()
         self._ignore_recording()
 
         # WARNING: there's a race condition right here. If someone starts
