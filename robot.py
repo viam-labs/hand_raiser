@@ -73,7 +73,8 @@ class Robot:
         that wiggles the hand on inactivity.
         """
         if self._wiggler is not None:
-            self._logger.warning("LOGIC BUG: trying to raise already-raised hand")
+            self._logger.warning(
+                "LOGIC BUG: trying to raise already-raised hand")
             return
         self._logger.debug("raise hand")
         await self._servo.move(self.UPPER_POSITION)
@@ -85,7 +86,8 @@ class Robot:
         background task that wiggles the hand once in a while.
         """
         if self._wiggler is None:
-            self._logger.warning("LOGIC BUG: trying to lower already-lowered hand")
+            self._logger.warning(
+                "LOGIC BUG: trying to lower already-lowered hand")
             return
         self._wiggler.cancel()
         await self._wiggler
