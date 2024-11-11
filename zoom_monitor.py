@@ -152,13 +152,20 @@ class ZoomMonitor():
                 time.sleep(1)
                 continue  # Go to the next attempt
 
+            # Sometimes, the button is hidden off the bottom of the window,
+            # but moving the mouse to it will make it visible again. This
+            # tends to happen after someone stops sharing their screen.
+            ActionChains(self._driver).move_to_element(button).perform()
             try:
-                # Sometimes, the button is hidden off the bottom of the window,
-                # but moving the mouse to it will make it visible again. This
-                # tends to happen after someone stops sharing their screen.
-                ActionChains(self._driver).move_to_element(button).perform()
                 button.click()
-                self._logger.debug("participants list clicked")
+            except (ElementClickInterceptedException,
+                    ElementNotInteractableException) as e:
+                self._logger.debug(f"DOM isn't set up ({e}); try again soon.")
+                time.sleep(1)
+                continue  # Go to the next attempt
+            self._logger.debug("participants list clicked")
+
+            try:
                 # Now that we've clicked the participants list without raising
                 # an exception, wait until it shows up. If it doesn't show up
                 # yet, it might be that we've highlighted the button but
@@ -166,11 +173,9 @@ class ZoomMonitor():
                 # will succeed.
                 self._wait_for_element(
                     By.CLASS_NAME, "participants-wrapper__inner")
-            except (ElementClickInterceptedException,
-                    ElementNotInteractableException,
-                    TimeoutException) as e:
-                self._logger.debug("got exception: {}".format(e))
-                self._logger.debug("DOM isn't set up; wait and try again")
+            except TimeoutException:
+                self._logger.debug("timed out waiting for participants list,"
+                                   "will try clicking again soon.")
                 time.sleep(1)
                 continue  # Go to the next attempt
             self._logger.info("participants list opened")
