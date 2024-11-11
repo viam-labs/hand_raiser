@@ -87,7 +87,7 @@ class ZoomMonitor():
         self._wait_for_element(By.XPATH, PARTICIPANTS_BTN, timeout_s=30)
         self._logger.info("logged into Zoom successfully")
 
-    def _wait_for_element(self, approach, value, timeout_s=5):  # Helper function
+    def _wait_for_element(self, approach, value, timeout_s=5):  # Helper fn
         """
         Wait until there is at least one element identified by the approach
         and value. If `timeout_s` seconds elapse without such an element
