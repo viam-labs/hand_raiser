@@ -92,12 +92,9 @@ class ZoomMonitor():
         Wait until there is at least one element identified by the approach
         and value. If `timeout_s` seconds elapse without such an element
         appearing, we raise an exception.
-
-        Return the first element that is found.
         """
         WebDriverWait(self._driver, timeout_s).until(lambda _:
             len(self._driver.find_elements(approach, value)) != 0)
-        return self._driver.find_elements(approach, value)[0]
 
     def _check_if_meeting_ended(self):
         """
