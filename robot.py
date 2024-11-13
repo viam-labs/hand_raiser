@@ -7,6 +7,7 @@ from viam.robot.client import RobotClient
 
 import secrets
 
+
 @asynccontextmanager
 async def create_robot(log_level):
     """
@@ -73,7 +74,8 @@ class Robot:
         that wiggles the hand on inactivity.
         """
         if self._wiggler is not None:
-            self._logger.warning("LOGIC BUG: trying to raise already-raised hand")
+            self._logger.warning(
+                "LOGIC BUG: trying to raise already-raised hand")
             return
         self._logger.debug("raise hand")
         await self._servo.move(self.UPPER_POSITION)
@@ -85,7 +87,8 @@ class Robot:
         background task that wiggles the hand once in a while.
         """
         if self._wiggler is None:
-            self._logger.warning("LOGIC BUG: trying to lower already-lowered hand")
+            self._logger.warning(
+                "LOGIC BUG: trying to lower already-lowered hand")
             return
         self._wiggler.cancel()
         await self._wiggler
@@ -102,14 +105,13 @@ class Robot:
         try:
             while True:
                 await asyncio.sleep(self.INACTIVITY_PERIOD_S)
+
                 self._logger.debug("wiggle wiggle wiggle")
-                for _ in range(1):
-                    await self._servo.move(self.UPPER_POSITION +
-                                           self.WIGGLE_AMOUNT)
-                    await asyncio.sleep(self.WIGGLE_DELAY_S)
-                    await self._servo.move(self.UPPER_POSITION -
-                                           self.WIGGLE_AMOUNT)
-                    await asyncio.sleep(self.WIGGLE_DELAY_S)
+                await self._servo.move(self.UPPER_POSITION + self.WIGGLE_AMOUNT)
+                await asyncio.sleep(self.WIGGLE_DELAY_S)
+                await self._servo.move(self.UPPER_POSITION - self.WIGGLE_AMOUNT)
+                await asyncio.sleep(self.WIGGLE_DELAY_S)
+
                 # Now that we're done wiggling for now, put the arm back up.
                 self._logger.debug("stop wiggling")
                 await self._servo.move(self.UPPER_POSITION)
