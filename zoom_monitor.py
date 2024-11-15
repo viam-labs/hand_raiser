@@ -146,7 +146,7 @@ class ZoomMonitor():
             try:
                 button = self._find_participants_button()
             except NoSuchElementException:
-                self._logger.debug("Could not find participants button.")
+                self._logger.info("Could not find participants button.")
                 time.sleep(1)
                 continue  # Go to the next attempt
 
@@ -158,7 +158,7 @@ class ZoomMonitor():
                 button.click()
             except (ElementClickInterceptedException,
                     ElementNotInteractableException) as e:
-                self._logger.debug(f"DOM isn't set up ({e}); try again soon.")
+                self._logger.info(f"DOM isn't set up ({e}); try again soon.")
                 time.sleep(1)
                 continue  # Go to the next attempt
             self._logger.debug("participants list clicked")
@@ -172,8 +172,8 @@ class ZoomMonitor():
                 self._wait_for_element(
                     By.CLASS_NAME, "participants-wrapper__inner", timeout_s=1)
             except TimeoutException:
-                self._logger.debug("timed out waiting for participants list,"
-                                   "will try clicking again soon.")
+                self._logger.info("timed out waiting for participants list,"
+                                  "will try clicking again soon.")
                 continue  # Go to the next attempt
             self._logger.info("participants list opened")
             return  # Success!
