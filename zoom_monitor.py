@@ -19,7 +19,7 @@ import browser
 
 
 # XPath path expression to find participants button node
-PARTICIPANTS_BTN = ".//*[contains(@class, 'SvgParticipants')]"
+PARTICIPANTS_BTN = "//*[contains(@class, 'SvgParticipants')]"
 
 
 @asynccontextmanager
@@ -102,8 +102,9 @@ class ZoomMonitor():
         and value. If `timeout_s` seconds elapse without such an element
         appearing, we raise a TimeoutError.
         """
+        # Playwright's timeouts are all in milliseconds
         await self._driver.wait_for_selector(
-            value, state="attached", timeout=timeout_s)
+            value, state="attached", timeout=timeout_s * 1000)
 
     async def _check_if_meeting_ended(self):
         """
@@ -245,6 +246,7 @@ class ZoomMonitor():
         # raised" emoji). Elements whose class contains "270b" show up in
         # several places, however, so we restrict it to only the ones that are
         # within the participants list.
-        return await len(self._driver.query_selector_all(
+        hands = await self._driver.query_selector_all(
             "//*[@class='participants-wrapper__inner']"
-            "//*[contains(@class, '270b')]"))
+            "//*[contains(@class, '270b')]")
+        return len(hands)
