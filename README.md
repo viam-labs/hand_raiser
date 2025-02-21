@@ -6,8 +6,10 @@ When we have large meetings, sometimes the remote employees are unable to partic
 
 1. Clone this repo locally.
 2. Run `pip install -r requirements.txt` to install the dependencies.
-3. Edit `secrets.py` so it contains the robot's secret and URL. You can get these from anyone who worked on this project.
-4. Step 3 probably made the repo dirty. Run `git update-index --skip-worktree secrets.py` to make the repo clean again.
+3. Run `playwright install`.
+4. On Ubuntu, run `sudo apt-get install libavif16`. Figure out how to do this on Mac.
+5. Edit `secrets.py` so it contains the robot's secret and URL. You can get these from anyone who worked on this project.
+6. Step 3 probably made the repo dirty. Run `git update-index --skip-worktree secrets.py` to make the repo clean again.
 
 ## Running
 1. When you want Hand Raiser Bot to join a meeting, run `./main.py '<url-of-zoom-meeting>'` to start it. The URL likely contains a question mark, so we recommend enclosing the entire URL in single quotes so your terminal doesn't try pattern-matching on it.
