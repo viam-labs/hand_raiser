@@ -2,6 +2,7 @@ from contextlib import contextmanager
 import time
 import urllib.parse
 
+"""
 from selenium.common.exceptions import (ElementClickInterceptedException,
                                         ElementNotInteractableException,
                                         NoSuchElementException,
@@ -10,6 +11,8 @@ from selenium.common.exceptions import (ElementClickInterceptedException,
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
+"""
+from playwright.sync_api import sync_playwright, TimeoutError
 from viam.logging import getLogger, setLevel
 
 import browser
@@ -21,11 +24,12 @@ PARTICIPANTS_BTN = ".//*[contains(@class, 'SvgParticipants')]"
 
 @contextmanager
 def monitor_zoom(url, log_level):
-    zoom = ZoomMonitor(url, log_level)
-    try:
-        yield zoom
-    finally:
-        zoom.clean_up()
+    with sync_playwright() as p:
+        zoom = ZoomMonitor(p, url, log_level)
+        try:
+            yield zoom
+        finally:
+            zoom.clean_up()
 
 
 class MeetingEndedException(Exception):
@@ -41,16 +45,18 @@ class ZoomMonitor():
     a Chrome browser. We provide a way to count how many meeting participants
     currently have their hands raised.
     """
-    def __init__(self, url, log_level):
+    def __init__(self, p, url, log_level):
         self._logger = getLogger(__name__)
         self._meeting_ended = False
         setLevel(log_level)
 
-        self._driver = browser.spawn_driver()
+        # TODO: move this into browser.py
+        self._browser = p.webkit.launch(headless=False)
+        self._driver = self._browser.new_page()
 
         raw_url = self._get_raw_url(url)
         self._logger.debug(f"parsed URL {url} to {raw_url}")
-        self._driver.get(raw_url)
+        self._driver.goto(raw_url)
 
         self._join_meeting()
 
@@ -80,34 +86,31 @@ class ZoomMonitor():
         Set our name and join the meeting.
         """
         self._logger.debug("logging in...")
-        self._wait_for_element(By.ID, "input-for-name")
-        self._driver.find_element(By.ID, "input-for-name").send_keys(
-            "Hand Raiser Bot")
-        self._driver.find_element(By.CSS_SELECTOR, ".zm-btn").click()
-        self._wait_for_element(By.XPATH, PARTICIPANTS_BTN, timeout_s=30)
+        self._driver.fill("#input-for-name", "Hand Raiser Bot")
+        self._driver.query_selector(".zm-btn").click()
+        self._driver.wait_for_selector(PARTICIPANTS_BTN, state="attached")
+        self._wait_for_element(PARTICIPANTS_BTN, timeout_s=30)
         self._logger.info("logged into Zoom successfully")
 
-    def _wait_for_element(self, approach, value, timeout_s=5):
+    def _wait_for_element(self, value, *, timeout_s=5):
         """
         Wait until there is at least one element identified by the approach
         and value. If `timeout_s` seconds elapse without such an element
-        appearing, we raise a TimeoutException.
+        appearing, we raise a TimeoutError.
         """
-        WebDriverWait(self._driver, timeout_s).until(lambda _:
-            len(self._driver.find_elements(approach, value)) != 0)
+        self._driver.wait_for_selector(
+            value, state="attached", timeout=timeout_s)
 
     def _check_if_meeting_ended(self):
         """
         Throw a MeetingEndedException if the meeting has been ended by the
         host, and otherwise do nothing.
         """
-        try:
-            modal_title = self._driver.find_element(
-                By.CLASS_NAME, "zm-modal-body-title")
-        except NoSuchElementException:
+        modal_title = self._driver.query_selector(".zm-modal-body-title")
+        if not modal_title:
             return
 
-        if modal_title.text == "This meeting has been ended by host":
+        if modal_title.text_content() == "This meeting has been ended by host":
             self._meeting_ended = True  # Don't try logging out later
             raise MeetingEndedException()
 
@@ -118,14 +121,12 @@ class ZoomMonitor():
         the beginning if we joined when the recording was already in progress,
         or in the middle of the meeting if someone starts recording.
         """
-        try:
-            outer = self._driver.find_element(
-                By.CLASS_NAME, "recording-disclaimer-dialog")
-        except NoSuchElementException:
+        outer = self._driver.query_selector(".recording-disclaimer-dialog")
+        if not outer:
             return  # No one has started recording a video recently!
 
         # Click "Got it" to acknowledge that the meeting is being recorded.
-        outer.find_element(By.CLASS_NAME, "zm-btn--primary").click()
+        outer.query_selector(".zm-btn--primary").click()
 
     def _open_participants_list(self):
         """
@@ -133,34 +134,32 @@ class ZoomMonitor():
         until it's opened.
         """
         # First, check if it's already opened, and if so return immediately.
-        try:
-            self._driver.find_element(
-                By.CLASS_NAME, "participants-wrapper__inner")
+        if self._driver.query_selector(".participants-wrapper__inner"):
             return  # Already opened!
-        except NoSuchElementException:
-            pass  # We need to open it.
 
         # Right when we join Zoom, the participants button is not clickable so
         # we have to wait. Attempt to click the button a few times.
         for attempt in range(5):
-            try:
-                button = self._find_participants_button()
-            except NoSuchElementException:
+            button = self._find_participants_button()
+            if not button:
                 self._logger.info("Could not find participants button.")
+                # TODO: move to asyncio.sleep()
                 time.sleep(1)
                 continue  # Go to the next attempt
 
-            # Sometimes, the button is hidden off the bottom of the window,
-            # but moving the mouse to it will make it visible again. This
-            # tends to happen after someone stops sharing their screen.
-            ActionChains(self._driver).move_to_element(button).perform()
-            try:
-                button.click()
-            except (ElementClickInterceptedException,
-                    ElementNotInteractableException) as e:
-                self._logger.info(f"DOM isn't set up ({e}); try again soon.")
-                time.sleep(1)
-                continue  # Go to the next attempt
+            button.click()
+
+            ## Sometimes, the button is hidden off the bottom of the window,
+            ## but moving the mouse to it will make it visible again. This
+            ## tends to happen after someone stops sharing their screen.
+            #ActionChains(self._driver).move_to_element(button).perform()
+            #try:
+            #    button.click()
+            #except (ElementClickInterceptedException,
+            #        ElementNotInteractableException) as e:
+            #    self._logger.info(f"DOM isn't set up ({e}); try again soon.")
+            #    time.sleep(1)
+            #    continue  # Go to the next attempt
             self._logger.debug("participants list clicked")
 
             try:
@@ -170,8 +169,8 @@ class ZoomMonitor():
                 # haven't properly clicked it, and the next iteration's attempt
                 # will succeed.
                 self._wait_for_element(
-                    By.CLASS_NAME, "participants-wrapper__inner", timeout_s=1)
-            except TimeoutException:
+                    ".participants-wrapper__inner", timeout_s=1)
+            except TimeoutError:
                 self._logger.info("timed out waiting for participants list,"
                                   "will try clicking again soon.")
                 continue  # Go to the next attempt
@@ -192,17 +191,15 @@ class ZoomMonitor():
 
         Return the button that contains the participants icon.
         """
-        for outer in self._driver.find_elements(By.CLASS_NAME,
-                                                "footer-button-base__button"):
+        for outer in self._driver.query_selector_all(
+                ".footer-button-base__button"):
             self._logger.debug(f"trying to find participants button in {outer}")
-            try:
-                # Check if this footer button contains the participants
-                outer.find_element(By.XPATH, PARTICIPANTS_BTN)
+            # Check if this footer button contains the participants
+            if outer.query_selector(PARTICIPANTS_BTN):
                 return outer
-            except NoSuchElementException:
-                self._logger.debug("participants not present, next...")
-                continue  # wrong footer element, try the next one
-        raise NoSuchElementException("could not find participants button")
+            self._logger.debug("participants not present, next...")
+            continue  # wrong footer element, try the next one
+        raise ValueError("could not find participants button")
 
     def clean_up(self):
         """
@@ -213,12 +210,10 @@ class ZoomMonitor():
                 return  # Just abandon the meeting without trying to leave it.
 
             # Find the "leave" button and click on it.
-            self._driver.find_element(
-                By.CLASS_NAME, "footer__leave-btn").click()
-            self._driver.find_element(
-                By.CLASS_NAME, "leave-meeting-options__btn").click()
+            self._driver.query_selector(".footer__leave-btn").click()
+            self._driver.query_selector(".leave-meeting-options__btn").click()
         finally:
-            self._driver.quit()
+            self._browser.close()
 
     def count_hands(self):
         """
@@ -245,6 +240,6 @@ class ZoomMonitor():
         # raised" emoji). Elements whose class contains "270b" show up in
         # several places, however, so we restrict it to only the ones that are
         # within the participants list.
-        return len(self._driver.find_elements(
-            By.XPATH, "//*[@class='participants-wrapper__inner']"
-                      "//*[contains(@class, '270b')]"))
+        return len(self._driver.query_selector_all(
+            "//*[@class='participants-wrapper__inner']"
+            "//*[contains(@class, '270b')]"))
