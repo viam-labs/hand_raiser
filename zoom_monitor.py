@@ -1,4 +1,4 @@
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 import time
 import urllib.parse
 
@@ -12,7 +12,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 """
-from playwright.sync_api import sync_playwright, TimeoutError
+from playwright.async_api import async_playwright, TimeoutError
 from viam.logging import getLogger, setLevel
 
 import browser
@@ -22,10 +22,13 @@ import browser
 PARTICIPANTS_BTN = ".//*[contains(@class, 'SvgParticipants')]"
 
 
-@contextmanager
-def monitor_zoom(url, log_level):
-    with sync_playwright() as p:
-        zoom = ZoomMonitor(p, url, log_level)
+@asynccontextmanager
+async def monitor_zoom(url, log_level):
+    async with async_playwright() as p:
+        # __init__ doesn't support async stuff, so do everything in our own
+        # async _init function.
+        zoom = ZoomMonitor()
+        await zoom._init(p, url, log_level)
         try:
             yield zoom
         finally:
@@ -45,20 +48,20 @@ class ZoomMonitor():
     a Chrome browser. We provide a way to count how many meeting participants
     currently have their hands raised.
     """
-    def __init__(self, p, url, log_level):
+    async def _init(self, p, url, log_level):
         self._logger = getLogger(__name__)
         self._meeting_ended = False
         setLevel(log_level)
 
         # TODO: move this into browser.py
-        self._browser = p.webkit.launch(headless=False)
-        self._driver = self._browser.new_page()
+        self._browser = await p.webkit.launch(headless=False)
+        self._driver = await self._browser.new_page()
 
         raw_url = self._get_raw_url(url)
         self._logger.debug(f"parsed URL {url} to {raw_url}")
-        self._driver.goto(raw_url)
+        await self._driver.goto(raw_url)
 
-        self._join_meeting()
+        await self._join_meeting()
 
     @staticmethod
     def _get_raw_url(url):
@@ -81,32 +84,33 @@ class ZoomMonitor():
         # directories in the path to skip that.
         return f"https://app.zoom.us/wc/join/{url.split('/')[-1]}"
 
-    def _join_meeting(self):
+    async def _join_meeting(self):
         """
         Set our name and join the meeting.
         """
         self._logger.debug("logging in...")
-        self._driver.fill("#input-for-name", "Hand Raiser Bot")
-        self._driver.query_selector(".zm-btn").click()
-        self._driver.wait_for_selector(PARTICIPANTS_BTN, state="attached")
-        self._wait_for_element(PARTICIPANTS_BTN, timeout_s=30)
+        await self._driver.fill("#input-for-name", "Hand Raiser Bot")
+        button = await self._driver.query_selector(".zm-btn")
+        await button.click()
+        await self._driver.wait_for_selector(PARTICIPANTS_BTN, state="attached")
+        await self._wait_for_element(PARTICIPANTS_BTN, timeout_s=30)
         self._logger.info("logged into Zoom successfully")
 
-    def _wait_for_element(self, value, *, timeout_s=5):
+    async def _wait_for_element(self, value, *, timeout_s=5):
         """
         Wait until there is at least one element identified by the approach
         and value. If `timeout_s` seconds elapse without such an element
         appearing, we raise a TimeoutError.
         """
-        self._driver.wait_for_selector(
+        await self._driver.wait_for_selector(
             value, state="attached", timeout=timeout_s)
 
-    def _check_if_meeting_ended(self):
+    async def _check_if_meeting_ended(self):
         """
         Throw a MeetingEndedException if the meeting has been ended by the
         host, and otherwise do nothing.
         """
-        modal_title = self._driver.query_selector(".zm-modal-body-title")
+        modal_title = await self._driver.query_selector(".zm-modal-body-title")
         if not modal_title:
             return
 
@@ -114,40 +118,41 @@ class ZoomMonitor():
             self._meeting_ended = True  # Don't try logging out later
             raise MeetingEndedException()
 
-    def _ignore_recording(self):
+    async def _ignore_recording(self):
         """
         If we are notified that someone is recording this meeting, click past
         so we can count hands some more. This notification can come either at
         the beginning if we joined when the recording was already in progress,
         or in the middle of the meeting if someone starts recording.
         """
-        outer = self._driver.query_selector(".recording-disclaimer-dialog")
+        outer = await self._driver.query_selector(
+                ".recording-disclaimer-dialog")
         if not outer:
             return  # No one has started recording a video recently!
 
         # Click "Got it" to acknowledge that the meeting is being recorded.
-        outer.query_selector(".zm-btn--primary").click()
+        await outer.query_selector(".zm-btn--primary").click()
 
-    def _open_participants_list(self):
+    async def _open_participants_list(self):
         """
         Wait until we can open the participants list, then open it, then wait
         until it's opened.
         """
         # First, check if it's already opened, and if so return immediately.
-        if self._driver.query_selector(".participants-wrapper__inner"):
+        if await self._driver.query_selector(".participants-wrapper__inner"):
             return  # Already opened!
 
         # Right when we join Zoom, the participants button is not clickable so
         # we have to wait. Attempt to click the button a few times.
         for attempt in range(5):
-            button = self._find_participants_button()
+            button = await self._find_participants_button()
             if not button:
                 self._logger.info("Could not find participants button.")
                 # TODO: move to asyncio.sleep()
                 time.sleep(1)
                 continue  # Go to the next attempt
 
-            button.click()
+            await button.click()
 
             ## Sometimes, the button is hidden off the bottom of the window,
             ## but moving the mouse to it will make it visible again. This
@@ -168,7 +173,7 @@ class ZoomMonitor():
                 # yet, it might be that we've highlighted the button but
                 # haven't properly clicked it, and the next iteration's attempt
                 # will succeed.
-                self._wait_for_element(
+                await self._wait_for_element(
                     ".participants-wrapper__inner", timeout_s=1)
             except TimeoutError:
                 self._logger.info("timed out waiting for participants list,"
@@ -178,10 +183,10 @@ class ZoomMonitor():
             return  # Success!
 
         # If we get here, none of our attempts opened the participants list.
-        raise ElementClickInterceptedException(
+        raise ValueError(
             f"Could not open participants list after {attempt + 1} attempts")
 
-    def _find_participants_button(self):
+    async def _find_participants_button(self):
         """
         We want to click on an item with the participants icon. However, the
         icon itself is not clickable. A click would be intercepted by its
@@ -191,17 +196,17 @@ class ZoomMonitor():
 
         Return the button that contains the participants icon.
         """
-        for outer in self._driver.query_selector_all(
+        for outer in await self._driver.query_selector_all(
                 ".footer-button-base__button"):
             self._logger.debug(f"trying to find participants button in {outer}")
             # Check if this footer button contains the participants
-            if outer.query_selector(PARTICIPANTS_BTN):
+            if await outer.query_selector(PARTICIPANTS_BTN):
                 return outer
             self._logger.debug("participants not present, next...")
             continue  # wrong footer element, try the next one
         raise ValueError("could not find participants button")
 
-    def clean_up(self):
+    async def clean_up(self):
         """
         Leave the meeting and shut down the web server.
         """
@@ -210,17 +215,17 @@ class ZoomMonitor():
                 return  # Just abandon the meeting without trying to leave it.
 
             # Find the "leave" button and click on it.
-            self._driver.query_selector(".footer__leave-btn").click()
-            self._driver.query_selector(".leave-meeting-options__btn").click()
+            await self._driver.query_selector(".footer__leave-btn").click()
+            await self._driver.query_selector(".leave-meeting-options__btn").click()
         finally:
-            self._browser.close()
+            await self._browser.close()
 
-    def count_hands(self):
+    async def count_hands(self):
         """
         Return the number of people in the participants list with raised hands
         """
-        self._check_if_meeting_ended()
-        self._ignore_recording()
+        await self._check_if_meeting_ended()
+        await self._ignore_recording()
 
         # WARNING: there's a race condition right here. If someone starts
         # recording the meeting here, after _ignore_recording returns and
@@ -230,7 +235,7 @@ class ZoomMonitor():
 
         # If someone else shares their screen, it closes the participants list.
         # So, try reopening it every time we want to count hands.
-        self._open_participants_list()
+        await self._open_participants_list()
 
         # We want to find an SVG element whose class is
         # "lazy-svg-icon__icon lazy-icon-nvf/270b". However,
@@ -240,6 +245,6 @@ class ZoomMonitor():
         # raised" emoji). Elements whose class contains "270b" show up in
         # several places, however, so we restrict it to only the ones that are
         # within the participants list.
-        return len(self._driver.query_selector_all(
+        return await len(self._driver.query_selector_all(
             "//*[@class='participants-wrapper__inner']"
             "//*[contains(@class, '270b')]"))
