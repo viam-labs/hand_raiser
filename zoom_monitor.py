@@ -22,7 +22,7 @@ async def monitor_zoom(url, log_level):
         try:
             yield zoom
         finally:
-            zoom.clean_up()
+            await zoom.clean_up()
 
 
 class MeetingEndedException(Exception):
@@ -57,7 +57,7 @@ class ZoomMonitor():
     def _get_raw_url(url):
         """
         Remove any Google redirection or Zoom prompts to the Zoom meeting.
-        Returns the URL needed to connect inside the Selenium browser.
+        Returns the URL needed to connect inside the Playwright browser.
         """
         # Remove all blackslashes since shells may automatically add them.
         url = url.replace("\\", "")
