@@ -2,16 +2,6 @@ from contextlib import asynccontextmanager
 import time
 import urllib.parse
 
-"""
-from selenium.common.exceptions import (ElementClickInterceptedException,
-                                        ElementNotInteractableException,
-                                        NoSuchElementException,
-                                        TimeoutException
-                                        )
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-"""
 from playwright.async_api import async_playwright, TimeoutError
 from viam.logging import getLogger, setLevel
 
@@ -44,7 +34,7 @@ class MeetingEndedException(Exception):
 
 class ZoomMonitor():
     """
-    Given a URL to a Zoom meeting, join the meeting using Selenium controlling
+    Given a URL to a Zoom meeting, join the meeting using Playwright controlling
     a Chrome browser. We provide a way to count how many meeting participants
     currently have their hands raised.
     """
@@ -154,18 +144,6 @@ class ZoomMonitor():
                 continue  # Go to the next attempt
 
             await button.click()
-
-            ## Sometimes, the button is hidden off the bottom of the window,
-            ## but moving the mouse to it will make it visible again. This
-            ## tends to happen after someone stops sharing their screen.
-            #ActionChains(self._driver).move_to_element(button).perform()
-            #try:
-            #    button.click()
-            #except (ElementClickInterceptedException,
-            #        ElementNotInteractableException) as e:
-            #    self._logger.info(f"DOM isn't set up ({e}); try again soon.")
-            #    time.sleep(1)
-            #    continue  # Go to the next attempt
             self._logger.debug("participants list clicked")
 
             try:
