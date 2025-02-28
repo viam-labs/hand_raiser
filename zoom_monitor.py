@@ -44,6 +44,7 @@ class ZoomMonitor():
         setLevel(log_level)
 
         # TODO: move this into browser.py
+        #self._browser = await browser.spawn_driver(p)
         self._browser = await p.webkit.launch(headless=False)
         self._driver = await self._browser.new_page()
 
@@ -195,6 +196,8 @@ class ZoomMonitor():
                 return  # Just abandon the meeting without trying to leave it.
 
             # Find the "leave" button and click on it.
+            #print("sleeping for 10 minutes...")
+            #time.sleep(600)
             leave_button = await self._driver.query_selector(
                     ".footer__leave-btn")
             await leave_button.click()
