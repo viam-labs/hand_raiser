@@ -122,7 +122,8 @@ class ZoomMonitor():
             return  # No one has started recording a video recently!
 
         # Click "Got it" to acknowledge that the meeting is being recorded.
-        await outer.query_selector(".zm-btn--primary").click()
+        got_it_button = await outer.query_selector(".zm-btn--primary")
+        await got_it_button.click()
 
     async def _open_participants_list(self):
         """
@@ -194,8 +195,12 @@ class ZoomMonitor():
                 return  # Just abandon the meeting without trying to leave it.
 
             # Find the "leave" button and click on it.
-            await self._driver.query_selector(".footer__leave-btn").click()
-            await self._driver.query_selector(".leave-meeting-options__btn").click()
+            leave_button = await self._driver.query_selector(
+                    ".footer__leave-btn")
+            await leave_button.click()
+            confirm_button = await self._driver.query_selector(
+                    ".leave-meeting-options__btn")
+            await confirm_button.click()
         finally:
             await self._browser.close()
 
