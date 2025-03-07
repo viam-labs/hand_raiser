@@ -23,9 +23,6 @@ async def main():
         async with create_robot(log_level) as robot:
             audience = Audience(robot, log_level)
 
-            #print("sleeping...")
-            #await asyncio.sleep(600)
-
             while True:
                 count = await zoom.count_hands()
                 await audience.set_count(count)
