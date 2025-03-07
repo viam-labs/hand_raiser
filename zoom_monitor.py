@@ -190,21 +190,17 @@ class ZoomMonitor():
         """
         Leave the meeting and shut down the web server.
         """
-        print("about to clean up! sleeping for 10 minutes...")
-        time.sleep(600)
         try:  # If anything goes wrong, close the browser anyway.
             if self._meeting_ended:
                 return  # Just abandon the meeting without trying to leave it.
 
             # Find the "leave" button and click on it.
-            #print("sleeping for 10 minutes...")
-            #time.sleep(600)
-            leave_button = await self._driver.query_selector(
-                    ".footer__leave-btn")
-            await leave_button.click()
-            confirm_button = await self._driver.query_selector(
-                    ".leave-meeting-options__btn")
-            await confirm_button.click()
+            leave_button = self._driver.get_by_role("button", name="Leave")
+            # Double-clicking here is super weird, but single-clicking doesn't seem to work!?
+            await leave_button.dblclick()
+            await self._driver.get_by_role("menuitem", name="Leave Meeting").click()
+        except Exception as e:
+            print(f"encountered exception: {type(e)} {e}")
         finally:
             await self._browser.close()
 
