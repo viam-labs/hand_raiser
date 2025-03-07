@@ -137,7 +137,7 @@ class ZoomMonitor():
         # Right when we join Zoom, the participants button is not clickable so
         # we have to wait. Attempt to click the button a few times.
         for attempt in range(5):
-            button = await self._find_participants_button()
+            button = self._driver.get_by_role("button", name="open the participants list")
             if not button:
                 self._logger.info("Could not find participants button.")
                 # TODO: move to asyncio.sleep()
@@ -165,26 +165,6 @@ class ZoomMonitor():
         # If we get here, none of our attempts opened the participants list.
         raise ValueError(
             f"Could not open participants list after {attempt + 1} attempts")
-
-    async def _find_participants_button(self):
-        """
-        We want to click on an item with the participants icon. However, the
-        icon itself is not clickable. A click would be intercepted by its
-        grandparent element, a button with the class
-        "footer-button-base__button". Since it's not obvious how to click an
-        SVG element's grandparent, look through all footer buttons.
-
-        Return the button that contains the participants icon.
-        """
-        for outer in await self._driver.query_selector_all(
-                ".footer-button-base__button"):
-            self._logger.debug(f"trying to find participants button in {outer}")
-            # Check if this footer button contains the participants
-            if await outer.query_selector(PARTICIPANTS_BTN):
-                return outer
-            self._logger.debug("participants not present, next...")
-            continue  # wrong footer element, try the next one
-        raise ValueError("could not find participants button")
 
     async def clean_up(self):
         """
