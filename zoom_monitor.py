@@ -44,8 +44,7 @@ class ZoomMonitor():
         setLevel(log_level)
 
         # TODO: move this into browser.py
-        #self._browser = await browser.spawn_driver(p)
-        self._browser = await p.webkit.launch(headless=False)
+        self._browser = await browser.spawn_driver(p)
         self._driver = await self._browser.new_page()
 
         raw_url = self._get_raw_url(url)
@@ -191,6 +190,8 @@ class ZoomMonitor():
         """
         Leave the meeting and shut down the web server.
         """
+        print("about to clean up! sleeping for 10 minutes...")
+        time.sleep(600)
         try:  # If anything goes wrong, close the browser anyway.
             if self._meeting_ended:
                 return  # Just abandon the meeting without trying to leave it.

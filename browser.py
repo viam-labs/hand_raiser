@@ -16,28 +16,7 @@ async def spawn_driver(playwright):
 
     Return the created driver.
     """
-    print("monkey patching...")
-    asyncio_create_subprocess_exec = asyncio.create_subprocess_exec
-    asyncio_create_subprocess_shell = asyncio.create_subprocess_shell
-    if sys.version_info.major == 3 and sys.version_info.minor >= 11:
-        # In recent versions of Python, Popen has a process_group argument
-        # to put the new process in its own group.
-        asyncio.create_subprocess_exec = functools.partial(
-            asyncio_create_subprocess_exec, process_group=0)
-        asyncio.create_subprocess_shell = functools.partial(
-            asyncio_create_subprocess_shell, process_group=0)
-    else:
-        # In older versions, set a pre-execution function to create its own
-        # process group instead.
-        asyncio.create_subprocess_exec = functools.partial(
-            asyncio_create_subprocess_exec, preexec_fn=lambda: os.setpgid(0, 0))
-        asyncio.create_subprocess_shell = functools.partial(
-            asyncio_create_subprocess_shell, preexec_fn=lambda: os.setpgid(0, 0))
-    driver = await playwright.webkit.launch(headless=False)
-    # Undo the monkey patch
-    asyncio.create_subprocess_exec = asyncio_create_subprocess_exec
-    asyncio.create_subprocess_shell = asyncio_create_subprocess_shell
-    print("done monkey patching!")
+    driver = await playwright.webkit.launch(headless=False, handle_sigint=False)
     return driver
 
 
