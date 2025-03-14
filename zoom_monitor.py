@@ -181,6 +181,7 @@ class ZoomMonitor():
             await self._driver.get_by_role("menuitem", name="Leave Meeting").click()
         except Exception as e:
             print(f"encountered exception: {type(e)} {e}")
+            raise
         finally:
             await self._browser.close()
 
