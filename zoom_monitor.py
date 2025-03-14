@@ -84,7 +84,6 @@ class ZoomMonitor():
         button = await self._driver.query_selector(".zm-btn")
         await button.click()
         await self._driver.wait_for_selector(PARTICIPANTS_BTN, state="attached")
-        await self._wait_for_element(PARTICIPANTS_BTN, timeout_s=30)
         self._logger.info("logged into Zoom successfully")
 
     async def _wait_for_element(self, value, *, timeout_s=5):
