@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 import time
 import urllib.parse
@@ -140,8 +141,7 @@ class ZoomMonitor():
             button = self._driver.get_by_role("button", name="open the participants list")
             if not button:
                 self._logger.info("Could not find participants button.")
-                # TODO: move to asyncio.sleep()
-                time.sleep(1)
+                await asyncio.sleep(1)
                 continue  # Go to the next attempt
 
             await button.click()
