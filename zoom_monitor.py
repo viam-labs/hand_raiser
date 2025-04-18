@@ -108,22 +108,6 @@ class ZoomMonitor():
             self._meeting_ended = True  # Don't try logging out later
             raise MeetingEndedException()
 
-    async def _ignore_recording(self):
-        """
-        If we are notified that someone is recording this meeting, click past
-        so we can count hands some more. This notification can come either at
-        the beginning if we joined when the recording was already in progress,
-        or in the middle of the meeting if someone starts recording.
-        """
-        outer = await self._driver.query_selector(
-                ".recording-disclaimer-dialog")
-        if not outer:
-            return  # No one has started recording a video recently!
-
-        # Click "Got it" to acknowledge that the meeting is being recorded.
-        got_it_button = await outer.query_selector(".zm-btn--primary")
-        await got_it_button.click()
-
     async def _open_participants_list(self):
         """
         Wait until we can open the participants list, then open it, then wait
@@ -188,13 +172,6 @@ class ZoomMonitor():
         Return the number of people in the participants list with raised hands
         """
         await self._check_if_meeting_ended()
-        await self._ignore_recording()
-
-        # WARNING: there's a race condition right here. If someone starts
-        # recording the meeting here, after _ignore_recording returns and
-        # before _open_participants_list runs, we will time out opening the
-        # list and crash. It's such an unlikely event that we haven't bothered
-        # fixing it yet.
 
         # If someone else shares their screen, it closes the participants list.
         # So, try reopening it every time we want to count hands.
