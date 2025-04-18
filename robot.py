@@ -77,7 +77,7 @@ class Robot:
             self._logger.warning(
                 "LOGIC BUG: trying to raise already-raised hand")
             return
-        self._logger.debug("raise hand")
+        self._logger.info("raise hand")
         await self._servo.move(self.UPPER_POSITION)
         self._wiggler = asyncio.create_task(self._wiggle_on_inactivity())
 
@@ -93,7 +93,7 @@ class Robot:
         self._wiggler.cancel()
         await self._wiggler
         self._wiggler = None
-        self._logger.debug("lower hand")
+        self._logger.info("lower hand")
         await self._servo.move(self.LOWER_POSITION)
 
     async def _wiggle_on_inactivity(self):
@@ -106,7 +106,7 @@ class Robot:
             while True:
                 await asyncio.sleep(self.INACTIVITY_PERIOD_S)
 
-                self._logger.debug("wiggle wiggle wiggle")
+                self._logger.info("wiggle wiggle wiggle")
                 await self._servo.move(self.UPPER_POSITION + self.WIGGLE_AMOUNT)
                 await asyncio.sleep(self.WIGGLE_DELAY_S)
                 await self._servo.move(self.UPPER_POSITION - self.WIGGLE_AMOUNT)

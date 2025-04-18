@@ -156,7 +156,7 @@ class ZoomMonitor():
                     ".participants-wrapper__inner", timeout_s=1)
             except TimeoutError:
                 self._logger.info("timed out waiting for participants list,"
-                                  "will try clicking again soon.")
+                                  " will try clicking again soon.")
                 continue  # Go to the next attempt
             self._logger.info("participants list opened")
             return  # Success!
