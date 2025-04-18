@@ -1,16 +1,14 @@
+import asyncio
 import functools
 import os
 import socket
 import subprocess
 import sys
 
-from selenium.webdriver import Chrome
-from selenium.webdriver.chrome.options import Options
 
-
-def spawn_driver():
+async def spawn_driver(playwright):
     """
-    Normally, if you hit control-C, Selenium shuts down the web browser
+    Normally, if you hit control-C, Playwright shuts down the web browser
     immediately, but we want to leave the meeting before disconnecting.
     Put the subprocess running the web browser in a separate process group
     from ourselves, so it doesn't receive the SIGINT from the control-C.
@@ -18,20 +16,9 @@ def spawn_driver():
 
     Return the created driver.
     """
-    subprocess_Popen = subprocess.Popen
-    if sys.version_info.major == 3 and sys.version_info.minor >= 11:
-        # In recent versions of Python, Popen has a process_group argument
-        # to put the new process in its own group.
-        subprocess.Popen = functools.partial(
-            subprocess_Popen, process_group=0)
-    else:
-        # In older versions, set a pre-execution function to create its own
-        # process group instead.
-        subprocess.Popen = functools.partial(
-            subprocess_Popen, preexec_fn=lambda: os.setpgid(0, 0))
-    driver = Chrome(options=get_chrome_options())
-    subprocess.Popen = subprocess_Popen  # Undo the monkey patch
+    driver = await playwright.webkit.launch(headless=False, handle_sigint=False)
     return driver
+
 
 def get_chrome_options():
     chrome_options = Options()

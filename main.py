@@ -19,12 +19,12 @@ def parse_args():
 async def main():
     args = parse_args()
     log_level = logging.DEBUG if args.debug else logging.INFO
-    with monitor_zoom(args.url, log_level) as zoom:
+    async with monitor_zoom(args.url, log_level) as zoom:
         async with create_robot(log_level) as robot:
             audience = Audience(robot, log_level)
 
             while True:
-                count = zoom.count_hands()
+                count = await zoom.count_hands()
                 await audience.set_count(count)
                 await asyncio.sleep(0.5)
 
