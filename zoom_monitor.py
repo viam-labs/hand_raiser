@@ -1,6 +1,5 @@
 import asyncio
 from contextlib import asynccontextmanager
-import time
 import urllib.parse
 
 from playwright.async_api import async_playwright, TimeoutError
