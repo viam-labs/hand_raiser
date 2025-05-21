@@ -1,5 +1,6 @@
 import logging
 import pytest
+import time
 from unittest.mock import patch
 
 from ..zoom_monitor import monitor_zoom, ZoomMonitor
@@ -33,4 +34,10 @@ async def test_count_hands():
         async with monitor_zoom(meeting_link, log_level) as zoom:
             count = await zoom.count_hands()
             assert count == 0
+
+            await zoom._click_child_button("Reactions", "Raise Hand")
+
+            time.sleep(1)
+            count = await zoom.count_hands()
+            assert count == 1
     mock_log_info.assert_called_with("participants list opened")

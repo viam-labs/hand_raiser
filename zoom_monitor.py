@@ -109,6 +109,19 @@ class ZoomMonitor():
             self._meeting_ended = True  # Don't try logging out later
             raise MeetingEndedException()
 
+    async def _click_child_button(self, parent: str, child: str, child_role="button"):
+        parent_button = self._driver.get_by_role("button", name=parent)
+        for attempt in range(4):
+            try:
+                await parent_button.dblclick()
+                child_button = self._driver.get_by_role(child_role, name=child)
+                await child_button.click(timeout=100)
+                break
+            except TimeoutError as e:
+                if attempt == 4:
+                    raise e
+                continue
+
     async def _open_participants_list(self):
         """
         Wait until we can open the participants list, then open it, then wait
@@ -157,22 +170,7 @@ class ZoomMonitor():
             if self._meeting_ended:
                 return  # Just abandon the meeting without trying to leave it.
 
-            # Find the "leave" button.
-            leave_button = self._driver.get_by_role("button", name="Leave")
-            for attempt in range(5):
-                try:
-                    # Both double and single clicking is inconsistent so try both
-                    if attempt % 2 == 0:
-                        await leave_button.dblclick()
-                    if attempt % 2 == 1:
-                        await leave_button.click()
-                    await self._driver.get_by_role("menuitem", name="Leave Meeting").click(timeout=1000)
-                    break
-                except TimeoutError as e:
-                    if attempt == 4:
-                        raise e
-                    else:
-                        continue
+            await self._click_child_button("Leave", "Leave Meeting", "menuitem")
         finally:
             await self._browser.close()
 
