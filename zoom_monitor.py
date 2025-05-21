@@ -157,11 +157,15 @@ class ZoomMonitor():
             if self._meeting_ended:
                 return  # Just abandon the meeting without trying to leave it.
 
-            # Find the "leave" button and click on it.
+            # Find the "leave" button.
             leave_button = self._driver.get_by_role("button", name="Leave")
-            # Double-clicking here is super weird, but single-clicking doesn't seem to work!?
-            await leave_button.dblclick()
-            await self._driver.get_by_role("menuitem", name="Leave Meeting").click()
+            for _ in range(5):
+                try:
+                    # Double-clicking here isn't always consistent, but single-clicking doesn't seem to work!?
+                    await leave_button.dblclick()
+                    await self._driver.get_by_role("menuitem", name="Leave Meeting").click(timeout=1000)
+                except TimeoutError:
+                    continue
         except Exception as e:
             print(f"encountered exception: {type(e)} {e}")
             raise

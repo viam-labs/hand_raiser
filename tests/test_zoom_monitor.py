@@ -25,3 +25,12 @@ async def test_join_meeting():
         async with monitor_zoom(meeting_link, log_level):
             pass
         mock_log_info.assert_called_with("logged into Zoom successfully")
+
+
+@pytest.mark.asyncio
+async def test_count_hands():
+    with patch("hand_raiser.zoom_monitor.ZoomMonitor._logger.info") as mock_log_info:
+        async with monitor_zoom(meeting_link, log_level) as zoom:
+            count = await zoom.count_hands()
+            assert count == 0
+    mock_log_info.assert_called_with("participants list opened")
