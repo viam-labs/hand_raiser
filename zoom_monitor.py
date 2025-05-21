@@ -159,16 +159,20 @@ class ZoomMonitor():
 
             # Find the "leave" button.
             leave_button = self._driver.get_by_role("button", name="Leave")
-            for _ in range(5):
+            for attempt in range(5):
                 try:
-                    # Double-clicking here isn't always consistent, but single-clicking doesn't seem to work!?
-                    await leave_button.dblclick()
+                    # Both double and single clicking is inconsistent so try both
+                    if attempt % 2 == 0:
+                        await leave_button.dblclick()
+                    if attempt % 2 == 1:
+                        await leave_button.click()
                     await self._driver.get_by_role("menuitem", name="Leave Meeting").click(timeout=1000)
-                except TimeoutError:
-                    continue
-        except Exception as e:
-            print(f"encountered exception: {type(e)} {e}")
-            raise
+                    break
+                except TimeoutError as e:
+                    if attempt == 4:
+                        raise e
+                    else:
+                        continue
         finally:
             await self._browser.close()
 
