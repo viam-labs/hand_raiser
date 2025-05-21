@@ -2,7 +2,6 @@
 import argparse
 import asyncio
 import logging
-import sys
 
 from audience import Audience
 from robot import create_robot

@@ -29,3 +29,10 @@ When we have large meetings, sometimes the remote employees are unable to partic
   - As of summer 2023, Zoom did not have an official API for participant reactions like whether someone has raised their hand. Consequently, we're getting this data by webscraping with Playwright.
 - `secrets.py` contains the way to connect to the robot itself. This repo does not contain production data: this file must be edited before things will work.
 - `main.py` ties everything together: it sets up a ZoomMonitor, connects to a robot, wraps the robot in an Audience object, and then sets the hand count in the Audience based on what is reported from the ZoomMonitor.
+
+## Testing
+
+To run tests, run `pip install -r tests/requireemnts.txt`. Then run `pytest`.
+For more details on using Playwright, click [here](https://playwright.dev/python/docs/intro).
+
+Tests are run using a [Zoom meeting link](https://viam.zoom.us/j/82970814958?pwd=r88bp5b88JBpLANJBUVIUpvSjPpyBJ.1&jst=2#success) hosted by Nicole Jung.

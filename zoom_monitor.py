@@ -5,7 +5,7 @@ import urllib.parse
 from playwright.async_api import async_playwright, TimeoutError
 from viam.logging import getLogger, setLevel
 
-import browser
+from . import browser
 
 
 # XPath path expression to find participants button node
@@ -38,8 +38,9 @@ class ZoomMonitor():
     a Chrome browser. We provide a way to count how many meeting participants
     currently have their hands raised.
     """
+    _logger = getLogger(__name__)
+
     async def _init(self, p, url, log_level):
-        self._logger = getLogger(__name__)
         self._meeting_ended = False
         setLevel(log_level)
 
