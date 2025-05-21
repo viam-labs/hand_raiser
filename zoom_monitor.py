@@ -110,15 +110,32 @@ class ZoomMonitor():
             raise MeetingEndedException()
 
     async def _click_child_button(self, parent: str, child: str, child_role="button"):
+        """
+        Click a parent button to reveal a child button to click.
+
+        Args:
+            parent (str): The name of the parent button.
+            child (str): The name of the child button.
+            child_role (str, optional): The role of the child button. Defaults
+                to "button".
+
+        Raises:
+            TimeoutError: The child button could not be found even after
+                `max_attempts` attempts.
+        """
+        max_attempts = 4
+
         parent_button = self._driver.get_by_role("button", name=parent)
-        for attempt in range(4):
+        for attempt in range(max_attempts):
             try:
+                # Sometimes these buttons work with only a double click, other
+                # times with a single. Not sure why it's not consistent.
                 await parent_button.dblclick()
                 child_button = self._driver.get_by_role(child_role, name=child)
                 await child_button.click(timeout=100)
                 break
             except TimeoutError as e:
-                if attempt == 4:
+                if attempt == max_attempts:
                     raise e
                 continue
 

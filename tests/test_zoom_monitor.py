@@ -4,10 +4,10 @@ import time
 from unittest.mock import patch
 
 from ..zoom_monitor import monitor_zoom, ZoomMonitor
+from .. import secrets
 
-
+meeting_link = secrets.test_meeting_link
 zoom = ZoomMonitor()
-meeting_link = "https://www.google.com/url?q=https://viam.zoom.us/j/82970814958?pwd=r88bp5b88JBpLANJBUVIUpvSjPpyBJ.1&jst=2#success"
 log_level = logging.INFO
 
 
@@ -15,8 +15,8 @@ def test_get_raw_url():
     empty_url = zoom._get_raw_url('\\')
     assert empty_url == 'https://app.zoom.us/wc/join/'
 
-    meeting_url = zoom._get_raw_url(meeting_link)
-    assert meeting_url == "https://app.zoom.us/wc/join/82970814958?pwd=r88bp5b88JBpLANJBUVIUpvSjPpyBJ.1"
+    meeting_url = zoom._get_raw_url("https://www.hello.itsme.com/woo")
+    assert meeting_url == "https://app.zoom.us/wc/join/woo"
 
 
 @pytest.mark.asyncio
