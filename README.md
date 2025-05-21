@@ -36,3 +36,11 @@ To run tests, run `pip install -r tests/requireemnts.txt`. Then run `pytest`.
 For more details on using Playwright, click [here](https://playwright.dev/python/docs/intro).
 
 Tests are run using a [Zoom meeting link](https://viam.zoom.us/j/82970814958?pwd=r88bp5b88JBpLANJBUVIUpvSjPpyBJ.1&jst=2#success) hosted by Nicole Jung.
+
+## Desirable Next Steps
+
+- wait for host to start meeting
+- automatically post introductory chat message
+- deal with the pop up dialogs
+- add tests for audience and robot
+- run tests in a workflow
