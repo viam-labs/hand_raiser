@@ -5,7 +5,12 @@ import urllib.parse
 from playwright.async_api import async_playwright, TimeoutError
 from viam.logging import getLogger, setLevel
 
-from . import browser
+try:
+    import browser
+except ImportError:
+    # For testing since it can't find the browser package, and running main
+    # complains about not knowing the parent package.
+    from . import browser
 
 
 # XPath path expression to find participants button node
