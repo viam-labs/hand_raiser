@@ -8,8 +8,8 @@ from viam.logging import getLogger, setLevel
 try:
     import browser
 except ImportError:
-    # For testing since it can't find the browser package, and running main
-    # complains about not knowing the parent package.
+    # For testing since the test can't find the browser package, and running
+    # main doesn't know the parent package when run with this.
     from . import browser
 
 
