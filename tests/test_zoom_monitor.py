@@ -6,9 +6,11 @@ from unittest.mock import patch
 from ..zoom_monitor import monitor_zoom, ZoomMonitor
 from .. import secrets
 
-meeting_link = secrets.test_meeting_link
 zoom = ZoomMonitor()
 log_level = logging.INFO
+# This is a real meeting link so the test can only be run with a valid
+# internet connection.
+meeting_link = secrets.test_meeting_link
 
 
 def test_get_raw_url():

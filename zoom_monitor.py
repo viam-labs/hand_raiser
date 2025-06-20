@@ -132,17 +132,17 @@ class ZoomMonitor():
 
         parent_button = self._driver.get_by_role("button", name=parent)
         for attempt in range(max_attempts):
+            # Sometimes these buttons work with only a double click, other
+            # times with a single. Not sure why it's not consistent.
+            await parent_button.dblclick()
             try:
-                # Sometimes these buttons work with only a double click, other
-                # times with a single. Not sure why it's not consistent.
-                await parent_button.dblclick()
                 child_button = self._driver.get_by_role(child_role, name=child)
-                await child_button.click(timeout=100)
-                break
             except TimeoutError as e:
                 if attempt == max_attempts:
                     raise e
                 continue
+            await child_button.click(timeout=100)
+            break
 
     async def _open_participants_list(self):
         """
