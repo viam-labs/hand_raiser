@@ -5,7 +5,12 @@ import urllib.parse
 from playwright.async_api import async_playwright, TimeoutError
 from viam.logging import getLogger, setLevel
 
-import browser
+try:
+    import browser
+except ImportError:
+    # For testing since the test can't find the browser package, and
+    # main doesn't know the parent package when run with this.
+    from . import browser
 
 
 # XPath path expression to find participants button node
@@ -38,8 +43,9 @@ class ZoomMonitor():
     a Chrome browser. We provide a way to count how many meeting participants
     currently have their hands raised.
     """
+    _logger = getLogger(__name__)
+
     async def _init(self, p, url, log_level):
-        self._logger = getLogger(__name__)
         self._meeting_ended = False
         setLevel(log_level)
 
@@ -108,6 +114,36 @@ class ZoomMonitor():
             self._meeting_ended = True  # Don't try logging out later
             raise MeetingEndedException()
 
+    async def _click_child_button(self, parent: str, child: str, child_role="button"):
+        """
+        Click a parent button to reveal a child button to click.
+
+        Args:
+            parent (str): The name of the parent button.
+            child (str): The name of the child button.
+            child_role (str, optional): The role of the child button. Defaults
+                to "button".
+
+        Raises:
+            TimeoutError: The child button could not be found even after
+                `max_attempts` attempts.
+        """
+        max_attempts = 4
+
+        parent_button = self._driver.get_by_role("button", name=parent)
+        for attempt in range(max_attempts):
+            # Sometimes these buttons work with only a double click, other
+            # times with a single. Not sure why it's not consistent.
+            await parent_button.dblclick()
+            try:
+                child_button = self._driver.get_by_role(child_role, name=child)
+            except TimeoutError as e:
+                if attempt == max_attempts:
+                    raise e
+                continue
+            await child_button.click(timeout=100)
+            break
+
     async def _open_participants_list(self):
         """
         Wait until we can open the participants list, then open it, then wait
@@ -156,14 +192,7 @@ class ZoomMonitor():
             if self._meeting_ended:
                 return  # Just abandon the meeting without trying to leave it.
 
-            # Find the "leave" button and click on it.
-            leave_button = self._driver.get_by_role("button", name="Leave")
-            # Double-clicking here is super weird, but single-clicking doesn't seem to work!?
-            await leave_button.dblclick()
-            await self._driver.get_by_role("menuitem", name="Leave Meeting").click()
-        except Exception as e:
-            print(f"encountered exception: {type(e)} {e}")
-            raise
+            await self._click_child_button("Leave", "Leave Meeting", "menuitem")
         finally:
             await self._browser.close()
 

@@ -5,3 +5,5 @@
 address = "not-the-real-one.viam.cloud"
 api_key = "its-a-fake-key"
 api_key_id = "its-a-fake-key-id"
+
+test_meeting_link = "a-fake-link"
