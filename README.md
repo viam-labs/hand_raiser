@@ -9,7 +9,7 @@ When we have large meetings, sometimes the remote employees are unable to partic
 3. Run `playwright install`.
 4. On Ubuntu, run `sudo apt-get install libavif16`. On Mac, run `brew install libavif`.
 5. Edit `secrets.py` so it contains the robot's secret and URL. You can get these from anyone who worked on this project.
-6. Step 3 probably made the repo dirty. Run `git update-index --skip-worktree secrets.py` to make the repo clean again.
+6. The previous step probably made the repo dirty. Run `git update-index --skip-worktree secrets.py` to make the repo clean again.
 
 ## Running
 
