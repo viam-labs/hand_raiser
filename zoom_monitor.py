@@ -103,7 +103,7 @@ class ZoomMonitor():
         await self._driver.fill("#input-for-name", "Hand Raiser Bot")
         button = await self._driver.query_selector(".zm-btn")
         await button.click()
-        await asyncio.sleep(5)
+        await asyncio.sleep(2)
         await self._wait_for_meeting_start()
         self._logger.info("meeting started!")
         await self._driver.wait_for_selector(PARTICIPANTS_BTN, state="attached")
