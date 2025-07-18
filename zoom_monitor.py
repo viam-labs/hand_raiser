@@ -80,14 +80,32 @@ class ZoomMonitor():
         # directories in the path to skip that.
         return f"https://app.zoom.us/wc/join/{url.split('/')[-1]}"
 
+    async def _wait_for_meeting_start(self):
+        """
+        Wait for the meeting to start.
+        """
+        while True:
+            waiting_message_locator = self._driver.get_by_text(
+                "waiting for the host to start"
+            )
+            waiting_message_count = await waiting_message_locator.count()
+            if waiting_message_count == 0:
+                return  # Meeting has started!
+            self._logger.info("meeting hasn't started yet")
+            await asyncio.sleep(30)
+
     async def _join_meeting(self):
         """
         Set our name and join the meeting.
+        Wait for the meeting to start if necessary.
         """
         self._logger.debug("logging in...")
         await self._driver.fill("#input-for-name", "Hand Raiser Bot")
         button = await self._driver.query_selector(".zm-btn")
         await button.click()
+        await asyncio.sleep(2)
+        await self._wait_for_meeting_start()
+        self._logger.info("meeting started!")
         await self._driver.wait_for_selector(PARTICIPANTS_BTN, state="attached")
         self._logger.info("logged into Zoom successfully")
 
@@ -141,7 +159,7 @@ class ZoomMonitor():
                 if attempt == max_attempts:
                     raise e
                 continue
-            await child_button.click(timeout=100)
+            await child_button.click(timeout=10000)
             break
 
     async def _open_participants_list(self):
