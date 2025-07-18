@@ -33,9 +33,11 @@ When we have large meetings, sometimes the remote employees are unable to partic
 ## Testing
 
 To run tests, run `pip install -r tests/requirements.txt`. Then run `pytest`.
-For more details on using Playwright, click [here](https://playwright.dev/python/docs/intro).
+When running the tests, it's recommended to keep the mouse on the popup playwright window as tests can be flaky otherwise.
 
 Tests are run using an actual Zoom meeting link that is provided in the `secrets.py` file.
+
+For more details on using Playwright, click [here](https://playwright.dev/python/docs/intro).
 
 ## Desirable Next Steps
 
