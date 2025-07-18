@@ -167,7 +167,7 @@ class ZoomMonitor():
                 if attempt == max_attempts:
                     raise e
                 continue
-            await child_button.click(timeout=100)
+            await child_button.click(timeout=10000)
             break
 
     async def _open_participants_list(self):
