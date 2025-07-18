@@ -39,7 +39,6 @@ Tests are run using an actual Zoom meeting link that is provided in the `secrets
 
 ## Desirable Next Steps
 
-- wait for host to start meeting
 - automatically post introductory chat message
 - deal with the pop up dialogs
 - add tests for audience and robot
