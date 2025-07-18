@@ -47,7 +47,6 @@ class ZoomMonitor():
 
     async def _init(self, p, url, log_level):
         self._meeting_ended = False
-        self._meeting_started = False
         setLevel(log_level)
 
         # TODO: move this into browser.py
@@ -81,23 +80,18 @@ class ZoomMonitor():
         # directories in the path to skip that.
         return f"https://app.zoom.us/wc/join/{url.split('/')[-1]}"
 
-    async def _wait_for_meeting_start(self, just_joined: bool):
+    async def _wait_for_meeting_start(self):
         """
         Wait for the meeting to start.
-
-        Args:
-            just_joined (bool): If the bot just joined the meeting.
         """
-        if just_joined:
-            await asyncio.sleep(5)
-        waiting_message_locator = self._driver.get_by_text(
-            "waiting for the host to start"
-        )
-        waiting_message_count = await waiting_message_locator.count()
-        if waiting_message_count == 0:
-            self._meeting_started = True
-        else:
-            self._logger.info("meeting hasn't started")
+        while True:
+            waiting_message_locator = self._driver.get_by_text(
+                "waiting for the host to start"
+            )
+            waiting_message_count = await waiting_message_locator.count()
+            if waiting_message_count == 0:
+                return  # Meeting has started!
+            self._logger.info("meeting hasn't started yet")
             await asyncio.sleep(30)
 
     async def _join_meeting(self):
@@ -109,10 +103,8 @@ class ZoomMonitor():
         await self._driver.fill("#input-for-name", "Hand Raiser Bot")
         button = await self._driver.query_selector(".zm-btn")
         await button.click()
-        just_joined = True
-        while not self._meeting_started:
-            await self._wait_for_meeting_start(just_joined)
-            just_joined = False
+        await asyncio.sleep(5)
+        await self._wait_for_meeting_start()
         self._logger.info("meeting started!")
         await self._driver.wait_for_selector(PARTICIPANTS_BTN, state="attached")
         self._logger.info("logged into Zoom successfully")
