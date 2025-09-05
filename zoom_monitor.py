@@ -16,10 +16,11 @@ except ImportError:
 # XPath path expression to find participants button node
 PARTICIPANTS_BTN = "//*[contains(@class, 'SvgParticipants')]"
 
-INTRO_MSG = """Hello to all the new employees! This is the hand-raiser
-bot (HRB), which helps remote employees have a physical presence. If
-you have a question for the presenter, feel free to use Zoom's `Raise
-Hand` feature to raise a physical hand in the office!""".replace("\n", " ")
+INTRO_MSG = """This is the hand-raiser bot (HRB), which helps remote
+employees have a physical presence. If you have a question for the presenter,
+feel free to use Zoom's `Raise Hand` feature to raise a physical hand in the
+office!""".replace("\n", " ")
+
 
 @asynccontextmanager
 async def monitor_zoom(url, log_level):
