@@ -164,3 +164,4 @@ cython_debug/
 
 # Don't track changes to secrets.py! We never want to check that in again.
 secrets.py
+last_intro.json
