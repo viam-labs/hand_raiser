@@ -30,6 +30,8 @@ async def monitor_zoom(url, log_level):
         await zoom._init(p, url, log_level)
         try:
             yield zoom
+        except Exception as e:
+            zoom._logger.error(e)
         finally:
             await zoom.clean_up()
 
