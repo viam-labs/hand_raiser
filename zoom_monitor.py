@@ -228,12 +228,11 @@ class ZoomMonitor():
             # haven't properly clicked it, and the next iteration's attempt
             # will succeed.
             chat_header = await self._driver.query_selector(".chat-header__title")
-            if not chat_header:
-                self._logger.info("timed out waiting for chat,"
-                                  " will try clicking again soon.")
-                continue  # Go to the next attempt
-            self._logger.info("chat opened")
-            return  # Success!
+            if chat_header:
+                self._logger.info("chat opened")
+                return  # Success!
+            self._logger.info("timed out waiting for chat, "
+                              "will try clicking again soon.")
 
         # If we get here, none of our attempts opened the chat.
         raise ValueError(
