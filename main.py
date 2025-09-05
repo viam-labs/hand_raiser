@@ -5,6 +5,7 @@ import logging
 
 from audience import Audience
 from datetime import datetime
+from introduction import is_introduced, save_introduction
 from robot import create_robot
 from zoom_monitor import monitor_zoom, MeetingEndedException
 
@@ -22,13 +23,12 @@ async def main():
     async with monitor_zoom(args.url, log_level) as zoom:
         async with create_robot(log_level) as robot:
             audience = Audience(robot, log_level)
-            introduced = False
             while True:
-                if not introduced:
+                if not is_introduced(args.url):
                     time_minute = datetime.now().minute
                     if time_minute == 5 or time_minute == 35:
                         await zoom.send_message()
-                        introduced = True
+                        save_introduction(args.url)
                 count = await zoom.count_hands()
                 await audience.set_count(count)
                 await asyncio.sleep(0.5)

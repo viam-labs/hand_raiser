@@ -5,7 +5,7 @@ import json
 TIME_FORMAT = "%Y/%m/%d, %H:%M:%S"
 
 
-def isIntroduced(url: str) -> bool:
+def is_introduced(url: str) -> bool:
     try:
         with open("last_intro.json", "r") as file:
             data = json.load(file)
@@ -37,6 +37,6 @@ def save_introduction(url: str):
 
 if __name__ == "__main__":
     testURL = 'test'
-    print(isIntroduced(testURL))
+    print(is_introduced(testURL))
     save_introduction(testURL)
-    print(isIntroduced(testURL))
+    print(is_introduced(testURL))
