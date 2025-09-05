@@ -41,7 +41,6 @@ For more details on using Playwright, click [here](https://playwright.dev/python
 
 ## Desirable Next Steps
 
-- automatically post introductory chat message
 - deal with the pop up dialogs
 - add tests for audience and robot
 - run tests in a workflow
