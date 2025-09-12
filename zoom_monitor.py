@@ -285,6 +285,6 @@ class ZoomMonitor():
         await sendMsgBtn.click()
         self._logger.info("introduced myself to everyone :D")
 
-    async def send_message(self):
+    async def send_introduction(self):
         await self._open_chat()
         await self._enter_message()

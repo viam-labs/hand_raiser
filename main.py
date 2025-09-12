@@ -27,7 +27,7 @@ async def main():
                 if not is_introduced(args.url):
                     time_minute = datetime.now().minute
                     if time_minute == 5 or time_minute == 35:
-                        await zoom.send_message()
+                        await zoom.send_introduction()
                         save_introduction(args.url)
                 count = await zoom.count_hands()
                 await audience.set_count(count)
