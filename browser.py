@@ -16,7 +16,7 @@ async def spawn_driver(playwright):
 
     Return the created driver.
     """
-    driver = await playwright.webkit.launch(headless=False, handle_sigint=False)
+    driver = await playwright.chromium.launch(headless=False, handle_sigint=False, args=['--use-fake-device-for-media-stream', '--auto-accept-camera-and-microphone-capture'])
     return driver
 
 
